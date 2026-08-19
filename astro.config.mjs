@@ -14,6 +14,12 @@ import { getTranslation, I18nKey } from "./src/i18n/index.ts";
 import { calloutPlugin } from "./src/integrations/markdownCallout/index.ts";
 import { markdownForAgents } from "./src/integrations/markdownForAgents/index.ts";
 
+import playformCompress from "@playform/compress";
+
+import compressor from "astro-compressor";
+import { constants as zlib } from 'node:zlib'; 
+
+
 const expressiveCodePlugins = [];
 const siteTranslation = getTranslation(siteConfig.lang);
 
@@ -146,5 +152,15 @@ export default defineConfig({
     }),
     sitemap(),
     markdownForAgents(),
+    playformCompress(),
+    compressor({
+		brotli: {
+			params: {
+				[zlib.BROTLI_PARAM_QUALITY]: 11,
+			},
+		},
+		gzip: { level: 9 },
+		zstd: false
+	  })
   ],
 });
