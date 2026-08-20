@@ -63,6 +63,7 @@ export const siteConfig = {
 
   // 首页引言
   quote: "没有乐趣，就无利可图。简而言之，先生，钻研你最爱的事。",
+  quoteAuthor: "莎士比亚《驯悍记》",
 
   // Markdown Negotiation（Accept: text/markdown）
   // 开启后，构建会自动生成每页的 Markdown 版本，
