@@ -6,6 +6,7 @@ import Card from "@/components/ui/Card.astro";
 import { aboutConfig } from "@/config/aboutConfig";
 import { siteConfig } from "@/config/siteConfig";
 import BaseLayout from "@/layouts/BaseLayout.astro";
+import { resolveSiteAsset } from "@/utils/assets";
 
 interface Props {
   title?: string;
@@ -13,6 +14,8 @@ interface Props {
 }
 
 const { title = aboutConfig.pageTitle, description = aboutConfig.pageDescription } = Astro.props;
+const avatarImage = resolveSiteAsset(siteConfig.avatarImage);
+if (!avatarImage) throw new Error("A local avatar image must be configured.");
 ---
 
 <BaseLayout title={`${title} · ${siteConfig.title}`} description={description}>
@@ -27,7 +30,7 @@ const { title = aboutConfig.pageTitle, description = aboutConfig.pageDescription
           >
             <Image
               class="size-38 rounded-avatar-image object-cover"
-              src={siteConfig.gravatarUrl}
+              src={avatarImage}
               width={152}
               height={152}
               alt=""

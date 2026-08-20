@@ -7,6 +7,7 @@ import { navigationConfig } from "@/config/navigationConfig";
 import { siteConfig } from "@/config/siteConfig";
 import { getTranslator, I18nKey } from "@/i18n";
 import { normalizeSitePath } from "@/utils/paths";
+import { resolveSiteAsset } from "@/utils/assets";
 
 interface Props {
   currentPath: string;
@@ -17,6 +18,8 @@ const t = getTranslator();
 const homeHref = "/";
 const aboutHref = "/about";
 const normalizedCurrentPath = normalizeSitePath(currentPath);
+const avatarImage = resolveSiteAsset(siteConfig.avatarImage);
+if (!avatarImage) throw new Error("A local avatar image must be configured.");
 ---
 
 <header class="mx-auto flex h-18 w-full max-w-chrome items-center gap-2 px-4 tablet:gap-5 tablet:px-6 wide:px-18">
@@ -71,7 +74,7 @@ const normalizedCurrentPath = normalizeSitePath(currentPath);
   >
     <Image
       class="size-9 rounded-full object-cover"
-      src={siteConfig.gravatarUrl}
+      src={avatarImage}
       width={36}
       height={36}
       alt=""

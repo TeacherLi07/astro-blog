@@ -13,7 +13,7 @@ export interface SiteConfig {
   readonly title: string;
   readonly owner: string;
   readonly description: readonly string[];
-  readonly gravatarUrl: string;
+  readonly avatarImage: string;
   readonly favicon: readonly FaviconConfig[];
   readonly lang: Locale;
   readonly subTitle: string;

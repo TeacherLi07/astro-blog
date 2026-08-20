@@ -6,7 +6,7 @@ export const siteConfig = {
   lang: "zh-CN",
 
   // 站点名称
-  title: "Misthaven",
+  title: "TeacherLi's Blog",
 
   // 站点副标题
   subTitle: "A calm place for stories and ideas",
@@ -15,17 +15,16 @@ export const siteConfig = {
   description: ["一个简洁、安静的 Astro 博客主题。", "在这里记录想法、故事与日常生活。"],
 
   // 站点 URL（决定 sitemap 和链接的生成；部署前请替换为你的站点地址）
-  siteUrl: "https://misthaven.cnbarrier.com",
+  siteUrl: "https://blog.teacherli.net",
 
   // OpenGraph/Twitter 社交元数据总开关，仅生产构建时生效，开启后会在构建时生成分享链接解析后的图片，推荐开启
-  generateOpenGraph: false,
+  generateOpenGraph: true,
 
   // 站点维护者
   owner: "CnBarrier",
 
-  // 头像链接
-  gravatarUrl:
-    "https://gravatar.com/avatar/b2aecd98f763fccfa425a4fb9329ff4294e4bf4257a166986ed75a02ced26010?v=1778975002000&size=256",
+  // 头像图片；文件位置处于 ./src/assets/ 中
+  avatarImage: "images/avatar.jpg",
 
   // Favicon 配置，文件位置处于 ./public/ 中
   // rel 支持：icon、shortcut icon、apple-touch-icon、manifest
@@ -59,11 +58,11 @@ export const siteConfig = {
 
   // 首页主视觉图片；任意一项不填时，两种主题共用另一张图片
   // 图片位置处于 ./src/assets/ 中
-  heroImageLight: "images/hero_light.png",
-  heroImageDark: "images/hero_dark.png",
+  heroImageLight: "images/march7-light.png",
+  heroImageDark: "images/cyy-dark.png",
 
   // 首页引言
-  quote: "在安静的角落，记录想法、生活与沿途的微光。",
+  quote: "没有乐趣，就无利可图。简而言之，先生，钻研你最爱的事。",
 
   // Markdown Negotiation（Accept: text/markdown）
   // 开启后，构建会自动生成每页的 Markdown 版本，

@@ -125,9 +125,6 @@ export default defineConfig({
     format: "file",
     concurrency: 4,
   },
-  image: {
-    remotePatterns: [{ protocol: "https", hostname: "gravatar.com" }],
-  },
   markdown: {
     processor: satteri({
       features: { directive: true },
