@@ -37,9 +37,21 @@ jobs:
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H cloud.teacherli.net >> ~/.ssh/known_hosts 2>/dev/null
-          rsync -az --delete \
-            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes" \
-            dist/ deploy@cloud.teacherli.net:/var/www/blog/
+
+          attempt=1
+          max_attempts=5
+          until rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3" \
+            dist/ deploy@cloud.teacherli.net:/var/www/blog/; do
+            if [ "$attempt" -ge "$max_attempts" ]; then
+              echo "::error::rsync failed after ${attempt} attempts"
+              exit 1
+            fi
+            echo "rsync attempt ${attempt} failed (exit $?), retrying in 10s..."
+            attempt=$((attempt + 1))
+            sleep 10
+          done
+          echo "rsync succeeded on attempt ${attempt}"
 
       - name: Smoke test
         run: |
