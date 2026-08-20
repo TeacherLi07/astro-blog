@@ -18,7 +18,7 @@ export const siteConfig = {
   siteUrl: "https://blog.teacherli.net",
 
   // OpenGraph/Twitter 社交元数据总开关，仅生产构建时生效，开启后会在构建时生成分享链接解析后的图片，推荐开启
-  generateOpenGraph: true,
+  generateOpenGraph: false,
 
   // 站点维护者
   owner: "CnBarrier",
