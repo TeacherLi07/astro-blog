@@ -6,13 +6,13 @@ export const siteConfig = {
   lang: "zh-CN",
 
   // 站点名称
-  title: "TeacherLi's Blog",
+  title: "TeacherLi的博客~",
 
   // 站点副标题
   subTitle: "Stories, Ideas, Attempts",
 
   // 站点描述
-  description: ["Tech Otakus Save the World", "技术宅拯救世界"],
+  description: ["Tech Otakus Save the World!"],
 
   // 站点 URL（决定 sitemap 和链接的生成；部署前请替换为你的站点地址）
   siteUrl: "https://blog.teacherli.net",

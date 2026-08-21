@@ -35,7 +35,7 @@ export const expressiveCodeConfig: ExpressiveCodeConfig = {
   },
 
   pluginLanguageLogo: {
-    enable: false,
+    enable: true,
     color: "mono",
     excludedLangs: [],
   },
