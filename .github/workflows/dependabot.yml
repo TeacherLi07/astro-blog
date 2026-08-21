@@ -1,0 +1,12 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly          # 每周开一次汇总 PR
+    versioning-strategy: lockfile-only
+    groups:
+      astro:
+        patterns: ["astro", "@astrojs/*"]   # astro 生态合并成一个 PR
+      minor-patch:
+        update-types: ["minor", "patch"]    # 其余小更新合并成一个 PR
