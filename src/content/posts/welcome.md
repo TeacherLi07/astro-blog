@@ -2,8 +2,9 @@
 title: "欢迎来到 TeacherLi 的博客站！"
 description: "欢迎！博客站的第一篇文章！好耶！"
 publishedAt: 2026-08-21
-updatedAt: 2026-08-21
+# updatedAt: 2026-08-21
 category: "杂项"
+cover: "welcome.jpg"
 draft: false
 ---
 
