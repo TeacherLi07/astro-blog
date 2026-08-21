@@ -18,6 +18,7 @@ class HeroThemeController {
   private readonly observer: MutationObserver;
   private preloadTimer: number | undefined;
   private idleCallback: number | undefined;
+  private preloadDelayTimer: number | undefined;
   private removeLoadListener = () => {};
   private pageLoaded = document.readyState === "complete";
   private preloadQueued = false;
@@ -46,6 +47,7 @@ class HeroThemeController {
     this.observer.disconnect();
     this.removeLoadListener();
     if (this.preloadTimer !== undefined) window.clearTimeout(this.preloadTimer);
+    if (this.preloadDelayTimer !== undefined) window.clearTimeout(this.preloadDelayTimer);
     if (this.idleCallback !== undefined && typeof window.cancelIdleCallback === "function") {
       window.cancelIdleCallback(this.idleCallback);
     }
@@ -143,7 +145,7 @@ class HeroThemeController {
         }
       });
     };
-    scheduleIdle();
+    this.preloadDelayTimer = window.setTimeout(scheduleIdle, 1000);
   }
 }
 
