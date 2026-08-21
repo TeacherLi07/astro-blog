@@ -5,7 +5,7 @@ publishedAt: 2026-08-21
 # updatedAt: 2026-07-12
 category: "个人实用"
 tags: ["HomeLab", "硬件", "施工中"]
-draft: true
+draft: false
 ---
 
 > [!NOTE]
