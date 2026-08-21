@@ -6,13 +6,13 @@ export const siteConfig = {
   lang: "zh-CN",
 
   // 站点名称
-  title: "TeacherLi's Blog",
+  title: "TeacherLi的博客~",
 
   // 站点副标题
-  subTitle: "A calm place for stories and ideas",
+  subTitle: "Stories, Ideas, Attempts",
 
   // 站点描述
-  description: ["一个简洁、安静的 Astro 博客主题。", "在这里记录想法、故事与日常生活。"],
+  description: ["Tech Otakus Save the World!"],
 
   // 站点 URL（决定 sitemap 和链接的生成；部署前请替换为你的站点地址）
   siteUrl: "https://blog.teacherli.net",
@@ -21,7 +21,7 @@ export const siteConfig = {
   generateOpenGraph: false,
 
   // 站点维护者
-  owner: "CnBarrier",
+  owner: "TeacherLi",
 
   // 头像图片；文件位置处于 ./src/assets/ 中
   avatarImage: "images/avatar.jpg",

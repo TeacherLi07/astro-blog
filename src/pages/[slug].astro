@@ -1,6 +1,15 @@
 ---
 import AboutPage from "@/components/layout/AboutPage.astro";
+import { aboutConfig } from "@/config/aboutConfig";
 import { getEntry, render } from "astro:content";
+
+export function getStaticPaths() {
+  if (!aboutConfig.enabled) {
+    return [];
+  }
+
+  return [{ params: { slug: "about" } }];
+}
 
 const page = await getEntry("pages", "about");
 

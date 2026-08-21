@@ -17,9 +17,11 @@ export const fontConfig = {
     //   src: "https://example.com/fonts/ProjectFont-VF.woff2"
     // },
   ],
-  // 代码字体按优先级从上到下排列；首选字体为 JetBrains Mono。
+  // 代码字体按优先级从上到下排列；首选字体为 Consolas。
   codeFont: [
+    { family: "Consolas" },
     { family: "JetBrains Mono", src: "/fonts/JetBrainsMono-Regular.woff2" },
+    { family: "monospace" },
 
     // public 字体示例：文件放在 public/fonts/JetBrainsMono-Regular.woff2
     // {
