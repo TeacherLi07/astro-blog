@@ -17,7 +17,10 @@ class HeroThemeController {
   private readonly pending = new Map<Theme, Promise<boolean>>();
   private readonly observer: MutationObserver;
   private preloadTimer: number | undefined;
+  private idleCallback: number | undefined;
   private removeLoadListener = () => {};
+  private pageLoaded = document.readyState === "complete";
+  private preloadQueued = false;
   private destroyed = false;
 
   constructor(hero: HTMLElement) {
@@ -33,8 +36,8 @@ class HeroThemeController {
       attributeFilter: ["data-theme"],
     });
 
+    this.waitForPageLoad();
     this.syncTheme(getCurrentTheme(), true);
-    this.scheduleAlternatePreload();
   }
 
   destroy() {
@@ -43,6 +46,9 @@ class HeroThemeController {
     this.observer.disconnect();
     this.removeLoadListener();
     if (this.preloadTimer !== undefined) window.clearTimeout(this.preloadTimer);
+    if (this.idleCallback !== undefined && typeof window.cancelIdleCallback === "function") {
+      window.cancelIdleCallback(this.idleCallback);
+    }
   }
 
   private loadImage(theme: Theme, priority: boolean): Promise<boolean> {
@@ -84,7 +90,10 @@ class HeroThemeController {
 
     this.hero.dataset.heroLoading = theme;
     void this.loadImage(theme, priority).then((success) => {
-      if (!this.destroyed && success && getCurrentTheme() === theme) this.showTheme(theme);
+      if (!this.destroyed && success && getCurrentTheme() === theme) {
+        this.showTheme(theme);
+        this.scheduleAlternatePreload();
+      }
     });
   }
 
@@ -93,7 +102,23 @@ class HeroThemeController {
     delete this.hero.dataset.heroLoading;
   }
 
+  private waitForPageLoad() {
+    if (this.pageLoaded) return;
+
+    const markLoaded = () => {
+      this.pageLoaded = true;
+      this.removeLoadListener = () => {};
+      this.scheduleAlternatePreload();
+    };
+    window.addEventListener("load", markLoaded, { once: true });
+    this.removeLoadListener = () => window.removeEventListener("load", markLoaded);
+  }
+
   private scheduleAlternatePreload() {
+    if (!this.pageLoaded || this.preloadQueued || this.destroyed) return;
+    if (!this.loaded.has(getCurrentTheme())) return;
+
+    this.preloadQueued = true;
     const preload = () => {
       if (this.destroyed) return;
       const alternate = getCurrentTheme() === "dark" ? "light" : "dark";
@@ -103,18 +128,12 @@ class HeroThemeController {
     const scheduleIdle = () => {
       if (this.destroyed) return;
       if (typeof window.requestIdleCallback === "function") {
-        window.requestIdleCallback(preload, { timeout: 2000 });
+        this.idleCallback = window.requestIdleCallback(preload, { timeout: 2000 });
       } else {
         this.preloadTimer = window.setTimeout(preload, 0);
       }
     };
-
-    if (document.readyState === "complete") {
-      scheduleIdle();
-    } else {
-      window.addEventListener("load", scheduleIdle, { once: true });
-      this.removeLoadListener = () => window.removeEventListener("load", scheduleIdle);
-    }
+    scheduleIdle();
   }
 }
 
