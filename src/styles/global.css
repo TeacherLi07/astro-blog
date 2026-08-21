@@ -345,11 +345,27 @@
     display: none;
   }
 
-  :root[data-theme="dark"] .hero-image-light {
+  :root[data-theme="dark"] [data-hero]:not([data-hero-active]) .hero-image-light {
     display: none;
   }
 
-  :root[data-theme="dark"] .hero-image-dark {
+  :root[data-theme="dark"] [data-hero]:not([data-hero-active]) .hero-image-dark {
+    display: block;
+  }
+
+  [data-hero-active="dark"] .hero-image-light {
+    display: none;
+  }
+
+  [data-hero-active="light"] .hero-image-light {
+    display: block;
+  }
+
+  [data-hero-active="light"] .hero-image-dark {
+    display: none;
+  }
+
+  [data-hero-active="dark"] .hero-image-dark {
     display: block;
   }
 

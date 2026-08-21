@@ -1,5 +1,5 @@
 ---
-import { Image } from "astro:assets";
+import { getImage } from "astro:assets";
 
 interface Props {
   title: string;
@@ -16,23 +16,38 @@ const hasThemeVariants = Boolean(
   resolvedLightImage && resolvedDarkImage && resolvedLightImage.src !== resolvedDarkImage.src,
 );
 const imageClass = "absolute inset-0 size-full object-cover object-[66%_center] tablet:object-[center_48%]";
+const optimizedLightImage = resolvedLightImage ? await getImage({ src: resolvedLightImage }) : null;
+const optimizedDarkImage = hasThemeVariants && resolvedDarkImage ? await getImage({ src: resolvedDarkImage }) : null;
 ---
 
 <section
   class="relative flex min-h-[30.625rem] items-end overflow-hidden rounded-panel border border-border/75 bg-hero after:absolute after:inset-0 after:bg-hero-mobile after:content-[''] tablet:min-h-112 tablet:items-center tablet:after:bg-hero-wide"
   aria-labelledby="hero-title"
+  data-hero
 >
   {
-    resolvedLightImage && (
+    optimizedLightImage && (
       <>
-        <Image
+        <img
           class:list={[imageClass, hasThemeVariants ? "hero-image-light" : "hero-image"]}
-          src={resolvedLightImage}
+          data-hero-image="light"
+          data-hero-src={optimizedLightImage.src}
+          width={resolvedLightImage?.width}
+          height={resolvedLightImage?.height}
           alt=""
-          priority
+          decoding="async"
+          fetchpriority="high"
         />
-        {hasThemeVariants && resolvedDarkImage && (
-          <Image class:list={[imageClass, "hero-image-dark"]} src={resolvedDarkImage} alt="" priority />
+        {hasThemeVariants && optimizedDarkImage && (
+          <img
+            class:list={[imageClass, "hero-image-dark"]}
+            data-hero-image="dark"
+            data-hero-src={optimizedDarkImage.src}
+            width={resolvedDarkImage?.width}
+            height={resolvedDarkImage?.height}
+            alt=""
+            decoding="async"
+          />
         )}
       </>
     )
@@ -57,3 +72,7 @@ const imageClass = "absolute inset-0 size-full object-cover object-[66%_center] 
     </p>
   </div>
 </section>
+
+<script>
+  import "@/scripts/heroThemeLoader";
+</script>
