@@ -75,8 +75,23 @@ const optimizedDarkImage = resolvedDarkImage ? await getImage({ src: resolvedDar
 
 <script is:inline>
   (() => {
+  const globalWindow = window;
+  globalWindow.__misthavenHeroController?.destroy();
+
+  let heroObserver;
+  let activeHero;
+  let removeWindowLoadListener = () => {};
+  let destroyed = false;
+
+  const setupHero = () => {
+    if (destroyed || activeHero) return;
+
+    heroObserver?.disconnect();
+    removeWindowLoadListener();
+
     const hero = document.querySelector("[data-hero]");
     if (!(hero instanceof HTMLElement)) return;
+    activeHero = hero;
 
     const images = new Map(
       [...hero.querySelectorAll("[data-hero-image]")].map((image) => [image.dataset.heroImage, image]),
@@ -138,12 +153,35 @@ const optimizedDarkImage = resolvedDarkImage ? await getImage({ src: resolvedDar
     };
 
     if (document.readyState === "complete") preloadAlternate();
-    else window.addEventListener("load", preloadAlternate, { once: true });
+    else {
+      window.addEventListener("load", preloadAlternate, { once: true });
+      removeWindowLoadListener = () => window.removeEventListener("load", preloadAlternate);
+    }
 
-    new MutationObserver(() => {
+    heroObserver = new MutationObserver(() => {
       const theme = currentTheme();
       if (theme === activeTheme && !hero.dataset.heroLoading) return;
       syncTheme(theme, true);
-    }).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    });
+    heroObserver.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+  };
+
+  const destroy = () => {
+    heroObserver?.disconnect();
+    removeWindowLoadListener();
+    heroObserver = undefined;
+    activeHero = undefined;
+    destroyed = true;
+    document.removeEventListener("astro:page-load", setupHero);
+    document.removeEventListener("astro:before-swap", destroy);
+    if (globalWindow.__misthavenHeroController?.destroy === destroy) {
+      delete globalWindow.__misthavenHeroController;
+    }
+  };
+
+  globalWindow.__misthavenHeroController = { destroy };
+  document.addEventListener("astro:page-load", setupHero);
+  document.addEventListener("astro:before-swap", destroy);
+  setupHero();
   })();
 </script>
