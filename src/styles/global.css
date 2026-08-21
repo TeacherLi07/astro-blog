@@ -369,11 +369,6 @@
     display: block;
   }
 
-  [data-hero-loading="light"][data-hero-active="dark"] .hero-image-dark,
-  [data-hero-loading="dark"][data-hero-active="light"] .hero-image-light {
-    display: block;
-  }
-
   theme-toggle [data-theme-trigger-icon] {
     display: none;
   }

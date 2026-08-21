@@ -17,7 +17,7 @@ const hasThemeVariants = Boolean(
 );
 const imageClass = "absolute inset-0 size-full object-cover object-[66%_center] tablet:object-[center_48%]";
 const optimizedLightImage = resolvedLightImage ? await getImage({ src: resolvedLightImage }) : null;
-const optimizedDarkImage = resolvedDarkImage ? await getImage({ src: resolvedDarkImage }) : null;
+const optimizedDarkImage = hasThemeVariants && resolvedDarkImage ? await getImage({ src: resolvedDarkImage }) : null;
 ---
 
 <section

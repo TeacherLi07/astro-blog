@@ -18,9 +18,12 @@ class HeroThemeController {
   private readonly observer: MutationObserver;
   private preloadTimer: number | undefined;
   private idleCallback: number | undefined;
+  private animationFrame: number | undefined;
   private removeLoadListener = () => {};
   private pageLoaded = document.readyState === "complete";
   private preloadQueued = false;
+  private preloadStarted = false;
+  private scheduledAlternate: Theme | null = null;
   private destroyed = false;
 
   constructor(hero: HTMLElement) {
@@ -30,7 +33,10 @@ class HeroThemeController {
         .map((image) => [image.dataset.heroImage, image] as const)
         .filter((entry): entry is [Theme, HeroImage] => Boolean(entry[0])),
     );
-    this.observer = new MutationObserver(() => this.syncTheme(getCurrentTheme(), true));
+    this.observer = new MutationObserver(() => {
+      this.cancelPendingPreload();
+      this.syncTheme(getCurrentTheme(), true);
+    });
     this.observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ["data-theme"],
@@ -49,6 +55,7 @@ class HeroThemeController {
     if (this.idleCallback !== undefined && typeof window.cancelIdleCallback === "function") {
       window.cancelIdleCallback(this.idleCallback);
     }
+    if (this.animationFrame !== undefined) window.cancelAnimationFrame(this.animationFrame);
   }
 
   private loadImage(theme: Theme, priority: boolean): Promise<boolean> {
@@ -92,6 +99,7 @@ class HeroThemeController {
 
     if (this.loaded.has(theme)) {
       this.showTheme(theme);
+      this.scheduleAlternatePreload();
       return;
     }
 
@@ -123,18 +131,21 @@ class HeroThemeController {
 
   private scheduleAlternatePreload() {
     if (!this.pageLoaded || this.preloadQueued || this.destroyed) return;
-    if (!this.loaded.has(getCurrentTheme())) return;
+    const currentTheme = getCurrentTheme();
+    if (!this.loaded.has(currentTheme)) return;
 
     this.preloadQueued = true;
+    this.scheduledAlternate = currentTheme === "dark" ? "light" : "dark";
     const preload = () => {
       if (this.destroyed) return;
-      const alternate = getCurrentTheme() === "dark" ? "light" : "dark";
-      void this.loadImage(alternate, false);
+      this.preloadStarted = true;
+      void this.loadImage(this.scheduledAlternate!, false);
     };
 
     const scheduleIdle = () => {
       if (this.destroyed) return;
-      window.requestAnimationFrame(() => {
+      this.animationFrame = window.requestAnimationFrame(() => {
+        this.animationFrame = undefined;
         if (this.destroyed) return;
         if (typeof window.requestIdleCallback === "function") {
           this.idleCallback = window.requestIdleCallback(preload, { timeout: 2000 });
@@ -144,6 +155,21 @@ class HeroThemeController {
       });
     };
     scheduleIdle();
+  }
+
+  private cancelPendingPreload() {
+    if (this.preloadStarted) return;
+
+    if (this.preloadTimer !== undefined) window.clearTimeout(this.preloadTimer);
+    if (this.idleCallback !== undefined && typeof window.cancelIdleCallback === "function") {
+      window.cancelIdleCallback(this.idleCallback);
+    }
+    if (this.animationFrame !== undefined) window.cancelAnimationFrame(this.animationFrame);
+    this.preloadTimer = undefined;
+    this.idleCallback = undefined;
+    this.animationFrame = undefined;
+    this.preloadQueued = false;
+    this.scheduledAlternate = null;
   }
 }
 
