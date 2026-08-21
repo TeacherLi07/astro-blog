@@ -1,6 +1,6 @@
 ---
 title: "个人HomeLab配置——硬件篇（1）"
-description: ""
+description: "施工中"
 publishedAt: 2026-08-21
 # updatedAt: 2026-07-12
 category: "个人实用"
