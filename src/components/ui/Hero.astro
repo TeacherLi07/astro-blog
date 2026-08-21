@@ -29,11 +29,10 @@ const imageClass = "absolute inset-0 size-full object-cover object-[66%_center] 
           class:list={[imageClass, hasThemeVariants ? "hero-image-light" : "hero-image"]}
           src={resolvedLightImage}
           alt=""
-          quality={90}
           priority
         />
         {hasThemeVariants && resolvedDarkImage && (
-          <Image class:list={[imageClass, "hero-image-dark"]} src={resolvedDarkImage} alt="" quality={90} priority />
+          <Image class:list={[imageClass, "hero-image-dark"]} src={resolvedDarkImage} alt="" priority />
         )}
       </>
     )
