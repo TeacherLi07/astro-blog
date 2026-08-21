@@ -24,7 +24,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci               # 有 package-lock.json，用 ci 保证可复现
+        run: npm ci --no-audit --no-fund
 
       - name: Build
         run: npm run build        # 失败则整个 job 中止，不会部署
@@ -40,16 +40,16 @@ jobs:
 
           attempt=1
           max_attempts=5
-          until rsync -azO --delete \
+          until rsync -a --checksum-choice=xxh128 --delete \
             -e "ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=3" \
             dist/ deploy@cloud.teacherli.net:/var/www/blog/; do
+            rc=$?
             if [ "$attempt" -ge "$max_attempts" ]; then
-              echo "::error::rsync failed after ${attempt} attempts"
+              echo "::error::rsync failed after ${attempt} attempts (last exit $rc)"
               exit 1
             fi
-            echo "rsync attempt ${attempt} failed (exit $?), retrying in 10s..."
+            echo "rsync attempt ${attempt} failed (exit $rc), retrying..."
             attempt=$((attempt + 1))
-            sleep 2
           done
           echo "rsync succeeded on attempt ${attempt}"
 
