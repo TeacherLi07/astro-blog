@@ -71,7 +71,14 @@ class HeroThemeController {
         resolve(success);
       };
 
-      image.addEventListener("load", () => finish(true), { once: true });
+      image.addEventListener(
+        "load",
+        () => {
+          // Let decoding and the next paint finish before competing for bandwidth.
+          void image.decode().then(() => finish(true)).catch(() => finish(true));
+        },
+        { once: true },
+      );
       image.addEventListener("error", () => finish(false), { once: true });
       image.src = image.dataset.heroSrc ?? "";
     });
@@ -127,11 +134,14 @@ class HeroThemeController {
 
     const scheduleIdle = () => {
       if (this.destroyed) return;
-      if (typeof window.requestIdleCallback === "function") {
-        this.idleCallback = window.requestIdleCallback(preload, { timeout: 2000 });
-      } else {
-        this.preloadTimer = window.setTimeout(preload, 0);
-      }
+      window.requestAnimationFrame(() => {
+        if (this.destroyed) return;
+        if (typeof window.requestIdleCallback === "function") {
+          this.idleCallback = window.requestIdleCallback(preload, { timeout: 2000 });
+        } else {
+          this.preloadTimer = window.setTimeout(preload, 0);
+        }
+      });
     };
     scheduleIdle();
   }
