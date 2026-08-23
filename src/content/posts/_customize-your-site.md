@@ -5,7 +5,7 @@ publishedAt: 2999-12-29
 updatedAt: 2999-12-29
 category: "指南"
 tags: ["配置", "Astro", "部署"]
-draft: false
+draft: true
 ---
 
 > 这是一篇随主题提供的示例文章。文中的名称和设置均为中性演示内容。
@@ -52,7 +52,7 @@ description: "这篇文章的简短摘要。"
 publishedAt: 2024-06-19
 category: "随笔"
 tags: ["开始"]
-draft: false
+draft: true
 ```
 
 文章也可以记录最近一次更新日期：
