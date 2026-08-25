@@ -1,26 +1,37 @@
 @layer components {
   .prose-content {
     color: var(--color-text);
-    font-size: 1rem;
-    line-height: 1.9;
+    font-weight: var(--font-body-weight);
+    font-size: var(--font-body-size);
+    line-height: var(--font-body-line-height);
+    letter-spacing: var(--font-letter-spacing);
+    font-feature-settings: var(--font-feature-settings);
   }
 
   .prose-content :where(h2, h3, h4, h5, h6) {
     color: var(--color-text);
-    line-height: 1.45;
+    line-height: var(--font-heading-line-height);
     scroll-margin-top: 1.5rem;
   }
 
   .prose-content h2 {
     margin: 3rem 0 1rem;
     font-size: 1.5rem;
-    font-weight: 700;
+    font-weight: var(--font-heading-weight);
   }
 
   .prose-content h3 {
     margin: 2.25rem 0 0.75rem;
     font-size: 1.25rem;
-    font-weight: 700;
+    font-weight: var(--font-heading-weight);
+  }
+
+  .prose-content :where(strong, b) {
+    font-weight: var(--font-strong-weight);
+  }
+
+  .prose-content :where(pre, code, kbd, samp) {
+    font-feature-settings: var(--font-feature-settings);
   }
 
   .prose-content :where(h4, h5, h6) {
@@ -89,7 +100,7 @@
     margin: 0 0 0.5rem;
     color: var(--color-text);
     line-height: 1.5;
-    font-weight: 700;
+    font-weight: var(--font-heading-weight);
   }
 
   .prose-content blockquote.prose-callout > .prose-callout-title > .prose-callout-icon {
@@ -150,7 +161,7 @@
     background: var(--color-code-block);
     border-radius: var(--radius-lg);
     font-family: var(--code-font-family);
-    font-size: 0.875rem;
+    font-size: var(--font-code-size);
   }
 
   .prose-content code:not(pre code) {
@@ -159,7 +170,7 @@
     background: var(--color-code-soft);
     border-radius: var(--radius-sm);
     font-family: var(--code-font-family);
-    font-size: 0.9em;
+    font-size: var(--font-inline-code-size);
   }
 
   .prose-content pre code {

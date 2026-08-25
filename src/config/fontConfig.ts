@@ -1,38 +1,70 @@
 import type { FontConfig } from "@/types/fontConfig";
 
+export const mapleFontFamily = "Maple Mono CN";
+
 export const fontConfig = {
-  // 字体按优先级从上到下排列；
-  font: [
-    { family: "system-ui" },
+  // 关闭后不再加载 Maple 字体文件，并回退到默认字体栈与默认字重。
+  mapleMode: true,
 
-    // public 字体示例：文件放在 public/fonts/ProjectFont-VF.woff2
-    // {
-    //   family: "ProjectFont",
-    //   src: "/fonts/ProjectFont-VF.woff2"
-    // },
+  fonts: {
+    maple: {
+      font: [
+        {
+          family: mapleFontFamily,
+          src: "/fonts/MapleMono-CN-Regular-VF.woff2",
+          weight: "100 800",
+        },
+        { family: "system-ui" },
+      ],
+      codeFont: [
+        { family: "Maple Mono CN" },
+        { family: "Consolas" },
+        {
+          family: "JetBrains Mono",
+          src: "/fonts/JetBrainsMono-Regular.woff2",
+          weight: "400",
+        },
+        { family: "monospace" },
+      ],
+    },
+    fallback: {
+      font: [{ family: "system-ui" }],
+      codeFont: [
+        { family: "Consolas" },
+        {
+          family: "JetBrains Mono",
+          src: "/fonts/JetBrainsMono-Regular.woff2",
+          weight: "400",
+        },
+        { family: "monospace" },
+      ],
+    },
+  },
 
-    // 外部字体示例：src 必须指向字体文件，而不是 CSS 样式表
-    // {
-    //   family: "ProjectFont",
-    //   src: "https://example.com/fonts/ProjectFont-VF.woff2"
-    // },
-  ],
-  // 代码字体按优先级从上到下排列；首选字体为 Consolas。
-  codeFont: [
-    { family: "Consolas" },
-    { family: "JetBrains Mono", src: "/fonts/JetBrainsMono-Regular.woff2" },
-    { family: "monospace" },
+  weights: {
+    maple: {
+      body: 330,
+      strong: 640,
+      heading: 700,
+    },
+    fallback: {
+      body: 400,
+      strong: 700,
+      heading: 700,
+    },
+  },
 
-    // public 字体示例：文件放在 public/fonts/JetBrainsMono-Regular.woff2
-    // {
-    //   family: "JetBrains Mono",
-    //   src: "/fonts/JetBrainsMono-Regular.woff2"
-    // },
-
-    // 外部字体示例：src 必须指向字体文件，而不是 CSS 样式表
-    // {
-    //   family: "JetBrains Mono",
-    //   src: "https://example.com/fonts/JetBrainsMono-Regular.woff2"
-    // },
-  ],
+  rendering: {
+    bodyFontSize: "1rem",
+    bodyLineHeight: 1.9,
+    headingLineHeight: 1.45,
+    letterSpacing: "0em",
+    inlineCodeSize: "0.9em",
+    codeFontSize: "0.875rem",
+    mapleFeatureSettings: '"calt" 1',
+    fallbackFeatureSettings: "normal",
+    textRendering: "optimizeLegibility",
+    syntheticBold: false,
+    syntheticOblique: true,
+  },
 } as const satisfies FontConfig;

@@ -20,14 +20,36 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 24        # 与本机 node -v 主版本保持一致即可
+          node-version: 24 # 与本机 node -v 主版本保持一致即可
           cache: npm
 
+      - name: Restore Maple font cache
+
+        uses: actions/cache@v4
+
+        with:
+          path: .cache/fonts
+
+          key: maple-font-${{ hashFiles('scripts/fonts/shared.mjs') }}
+
       - name: Install dependencies
-        run: npm ci --no-audit --no-fund 
+        run: npm ci --no-audit --no-fund
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: scripts/fonts/uv.lock
+
+      - name: Sync font subsetting environment
+        run: uv sync --project scripts/fonts --locked --no-dev
+
+      - name: Build optimized font subset
+        run: npm run fonts:subset
 
       - name: Build
-        run: npm run build        # 失败则整个 job 中止，不会部署
+        run: npm run build # 失败则整个 job 中止，不会部署
 
       - name: Deploy via rsync
         env:
@@ -55,10 +77,42 @@ jobs:
 
       - name: Smoke test
         run: |
+          site_url="https://blog-test.teacherli.net"
+
           for i in 1 2 3; do
-            code=$(curl -sS -o /dev/null -w '%{http_code}' https://blog-test.teacherli.net/) || true
-            [ "$code" = "200" ] && echo "OK: 200" && exit 0
+            code=$(curl -sS -o /dev/null -w '%{http_code}' "$site_url/") || true
+            [ "$code" = "200" ] && break
+
+            if [ "$i" = "3" ]; then
+              echo "::error::smoke test failed, last status: ${code:-unknown}"
+              exit 1
+            fi
+
             sleep 10
           done
-          echo "::error::smoke test failed, last status: ${code:-unknown}"
-          exit 1
+          echo "OK: homepage 200"
+
+          homepage=$(curl -fsS "$site_url/")
+          font_path=$(printf '%s' "$homepage" | grep -o '/fonts/generated/[^" ]*' | head -n 1)
+
+          if [ -z "$font_path" ]; then
+            echo "::error::homepage does not reference a generated web font"
+            exit 1
+          fi
+
+          font_url="${site_url%/}${font_path}"
+          font_body=$(mktemp)
+          trap 'rm -f "$font_body"' EXIT
+          font_code=$(curl -sS -o "$font_body" -w '%{http_code}' "$font_url")
+
+          if [ "$font_code" != "200" ]; then
+            echo "::error::generated font request failed (${font_code}): ${font_url}"
+            exit 1
+          fi
+
+          if [ "$(head -c 4 "$font_body")" != "wOF2" ]; then
+            echo "::error::generated font response is not a woff2 file: ${font_url}"
+            exit 1
+          fi
+
+          echo "OK: generated font 200 and valid woff2: ${font_path}"

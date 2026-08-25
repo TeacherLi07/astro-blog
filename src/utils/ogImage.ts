@@ -6,9 +6,10 @@ import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 import { createElement, type CSSProperties } from "satori/jsx";
 
-import { fontConfig } from "@/config/fontConfig";
+import { fontConfig, mapleFontFamily } from "@/config/fontConfig";
 import { siteConfig } from "@/config/siteConfig";
-import type { FontDefinition } from "@/types/fontConfig";
+import { resolveFontRuntime } from "@/utils/fonts";
+
 import { formatPostDate, type PostEntry } from "@/utils/posts";
 
 const CARD_WIDTH = 1200;
@@ -43,7 +44,11 @@ function loadFonts(): Promise<OgFont[]> {
   if (!fontCache) {
     fontCache = (async () => {
       let lastError: unknown;
-      const fonts = fontConfig.font as readonly FontDefinition[];
+      const fontRuntime = resolveFontRuntime(fontConfig, {
+        development: false,
+        mapleFontFamily,
+      });
+      const fonts = fontRuntime.stack.font;
 
       for (const font of fonts) {
         if (!font.src?.trim()) continue;

@@ -33,6 +33,11 @@ pnpm-debug.log*
 # cloudflare wrangler
 .wrangler/
 
+# downloaded and generated web fonts
+/.cache/
+/public/fonts/generated/
+/scripts/fonts/.venv/
+
 .playwright-mcp/
 ptd.md
 

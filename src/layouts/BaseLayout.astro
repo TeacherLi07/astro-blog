@@ -2,11 +2,11 @@
 import Footer from "@/components/layout/Footer.astro";
 import NavigationBar from "@/components/layout/NavigationBar.astro";
 import CommentViewCounts from "@/components/content/CommentViewCounts.astro";
-import { fontConfig } from "@/config/fontConfig";
+import { fontConfig, mapleFontFamily } from "@/config/fontConfig";
 import { siteConfig } from "@/config/siteConfig";
 import "@/styles/global.css";
 import { resolveSiteAsset } from "@/utils/assets";
-import { getFontFaceCss, getFontFamily, getFontPreconnects } from "@/utils/fonts";
+import { getFontFaceCss, getFontPreconnects, getFontStyle, resolveFontRuntime } from "@/utils/fonts";
 import { normalizeSitePath } from "@/utils/paths";
 import { ClientRouter } from "astro:transitions";
 
@@ -59,17 +59,20 @@ if (shouldRenderOpenGraph) {
 }
 
 const openGraphLocale = siteConfig.lang.replace("-", "_");
-const fontFamily = getFontFamily(fontConfig.font);
-const codeFontFamily = getFontFamily(fontConfig.codeFont);
-const configuredFonts = [...fontConfig.font, ...fontConfig.codeFont];
+const fontRuntime = resolveFontRuntime(fontConfig, {
+  development: import.meta.env.DEV,
+  mapleFontFamily,
+});
+const activeFonts = fontRuntime.stack;
+const configuredFonts = [...activeFonts.font, ...activeFonts.codeFont];
 const fontFaceCss = getFontFaceCss(configuredFonts);
 const fontPreconnects = getFontPreconnects(configuredFonts);
-const fontFamilyStyle = `--font-family: ${fontFamily}; --code-font-family: ${codeFontFamily}`;
+const fontStyle = getFontStyle(fontConfig, fontRuntime.useMapleStyles);
 const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
 ---
 
 <!doctype html>
-<html lang={siteConfig.lang} style={fontFamilyStyle}>
+<html lang={siteConfig.lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={pageDescription} />
@@ -138,6 +141,7 @@ const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
     {faviconLinks.map(({ src, sizes, rel, type }) => <link href={src.trim()} sizes={sizes} rel={rel} type={type} />)}
     {fontPreconnects.map((href) => <link rel="preconnect" href={href} crossorigin="anonymous" />)}
     {fontFaceCss && <style is:inline set:html={fontFaceCss} />}
+    {fontStyle && <style is:inline set:html={`:root{${fontStyle}}`} />}
     <title>{pageTitle}</title>
     <ClientRouter fallback="animate" />
   </head>
