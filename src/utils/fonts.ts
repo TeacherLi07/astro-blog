@@ -70,9 +70,12 @@ export function resolveFontRuntime(config: FontConfig, options: ResolveFontRunti
   }
 
   const generatedFontPath = assetResult.asset.publicPath;
+  const generatedFontWeight = `${assetResult.asset.weightMin} ${assetResult.asset.weightMax}`;
 
   function resolveGeneratedSource(font: FontDefinition): FontDefinition {
-    return font.family === options.mapleFontFamily && font.src?.trim() ? { ...font, src: generatedFontPath } : font;
+    return font.family === options.mapleFontFamily && font.src?.trim()
+      ? { ...font, src: generatedFontPath, weight: generatedFontWeight }
+      : font;
   }
 
   return {

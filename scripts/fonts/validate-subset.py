@@ -15,6 +15,7 @@ def main() -> None:
     charset_path = Path(sys.argv[2])
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     characters = charset_path.read_text(encoding="utf8")
+    supported_characters = list(dict.fromkeys(characters))
     font_path = Path("public") / manifest["publicPath"].lstrip("/")
     expected_output_sha256 = manifest["outputSha256"]
     actual_output_sha256 = hashlib.sha256(font_path.read_bytes()).hexdigest()
@@ -45,8 +46,20 @@ def main() -> None:
             and ord(character) not in cmap
         ]
 
-        if axes != {"wght": (100, 400, 800)}:
+        expected_axes = {
+            "wght": (
+                manifest["weightMin"],
+                manifest["weightDefault"],
+                manifest["weightMax"],
+            )
+        }
+        if axes != expected_axes:
             raise SystemExit(f"Unexpected variable axes: {axes}")
+        if manifest["charsetCount"] != len(supported_characters):
+            raise SystemExit(
+                f"Manifest character count mismatch: expected {len(supported_characters)}, "
+                f"got {manifest['charsetCount']}"
+            )
         if missing:
             preview = "".join(missing[:30])
             raise SystemExit(f"Missing {len(missing)} characters: {preview}")
@@ -59,8 +72,9 @@ def main() -> None:
 
     print(
         f"Validated subset: {len(cmap)} cmap entries, "
-        f"{manifest['charsetCount']} source characters, "
-        f"wght 100-400-800"
+        f"{manifest['charsetCount']} supported source characters "
+        f"({manifest.get('requestedCharsetCount', manifest['charsetCount'])} requested), "
+        f"wght {manifest['weightMin']}-{manifest['weightDefault']}-{manifest['weightMax']}"
     )
 
 

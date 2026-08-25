@@ -37,6 +37,7 @@ pnpm-debug.log*
 /.cache/
 /public/fonts/generated/
 /scripts/fonts/.venv/
+/scripts/fonts/__pycache__/
 
 .playwright-mcp/
 ptd.md

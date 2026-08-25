@@ -42,7 +42,7 @@ export const siteConfig = {
 
 字体在 `src/config/fontConfig.ts` 中集中配置。`mapleMode` 控制是否加载 Maple 字体并应用 Maple 字重；关闭时会改用 `fonts.fallback` 和 `weights.fallback`。正文、加粗、标题字重，以及行高、字距和代码字号都在同一份配置中调整。
 
-本地开发前会通过 `predev` 钩子下载完整 Regular 可变字体；CI 会在 Astro 构建前使用 `npm run fonts:subset` 按站点字符集生成子集字体。
+本地开发前会通过 `predev` 钩子下载完整 Regular 可变字体；CI 会在 Astro 构建前使用 `npm run fonts:subset` 按实际渲染来源收集字符集，并按项目中检测到的字重缩小可变轴范围。字体不支持的字符会自动回退到系统字体。
 
 生产构建遇到缺失或损坏的字体清单时会回退到 `fonts.fallback`，保证页面仍可访问；开发模式会直接报出字体资产错误。部署 workflow 的 Smoke Test 还会检查页面引用的生成字体可访问且是有效的 woff2 文件。
 

@@ -55,6 +55,9 @@ const manifest = {
   assetName: fontRelease.assetName,
   sourceSha256: fontRelease.sha256,
   publicPath: toPublicUrlPath(generatedFontPath),
+  weightMin: fontRelease.weightAxis.min,
+  weightDefault: fontRelease.weightAxis.default,
+  weightMax: fontRelease.weightAxis.max,
 };
 
 await writeFile(paths.manifest, `${JSON.stringify(manifest, null, 2)}\n`);

@@ -11,8 +11,12 @@ export type GeneratedFontAsset = {
   assetName: string;
   sourceSha256: string;
   publicPath: string;
+  weightMin: number;
+  weightDefault: number;
+  weightMax: number;
   outputSha256?: string;
   charsetCount?: number;
+  requestedCharsetCount?: number;
 };
 
 export type GeneratedFontAssetResult =
@@ -56,6 +60,23 @@ export function readGeneratedFontAsset(): GeneratedFontAssetResult {
     manifest.sourceSha256 !== fontRelease.sha256
   ) {
     return invalid("manifest belongs to a different font release");
+  }
+
+  const { min, default: defaultWeight, max } = fontRelease.weightAxis;
+  if (
+    typeof manifest.weightMin !== "number" ||
+    typeof manifest.weightDefault !== "number" ||
+    typeof manifest.weightMax !== "number" ||
+    !Number.isInteger(manifest.weightMin) ||
+    !Number.isInteger(manifest.weightDefault) ||
+    !Number.isInteger(manifest.weightMax) ||
+    manifest.weightMin < min ||
+    manifest.weightMin > defaultWeight ||
+    manifest.weightDefault !== defaultWeight ||
+    manifest.weightMax < defaultWeight ||
+    manifest.weightMax > max
+  ) {
+    return invalid("manifest contains an invalid variable weight range");
   }
 
   if (typeof manifest.publicPath !== "string" || !generatedFontPathPattern.test(manifest.publicPath)) {

@@ -5,6 +5,11 @@ export const fontRelease = {
   tag: "custom-cn-narrow-r7",
   assetName: "MapleMono-CN-Narrow-VF.woff2",
   sha256: "a533a0d48c12cbaf2b9f23e83e746ae86271ed757ea27aab0fc3c2e4eb26abd5",
+  weightAxis: {
+    min: 100,
+    default: 400,
+    max: 800,
+  },
 };
 
 export const paths = {
