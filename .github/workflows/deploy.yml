@@ -58,7 +58,30 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H cloud.teacherli.net >> ~/.ssh/known_hosts 2>/dev/null
+
+          known_hosts_tmp="$HOME/.ssh/known_hosts.tmp"
+          keyscan_log="$HOME/.ssh/ssh-keyscan.log"
+          keyscan_attempt=1
+          keyscan_max_attempts=5
+
+          while [ "$keyscan_attempt" -le "$keyscan_max_attempts" ]; do
+            echo "Fetching host keys (attempt $keyscan_attempt/$keyscan_max_attempts)..."
+
+            if ssh-keyscan -H -T 10 cloud.teacherli.net >"$known_hosts_tmp" 2>"$keyscan_log" &&
+              grep -Eq '^[^[:space:]]+[[:space:]]+(ssh-|ecdsa-|sk-)' "$known_hosts_tmp"; then
+              mv "$known_hosts_tmp" ~/.ssh/known_hosts
+              break
+            fi
+
+            if [ "$keyscan_attempt" = "$keyscan_max_attempts" ]; then
+              echo "::error::unable to fetch SSH host keys for cloud.teacherli.net:22 after $keyscan_max_attempts attempts"
+              cat "$keyscan_log" >&2
+              exit 1
+            fi
+
+            sleep 5
+            keyscan_attempt=$((keyscan_attempt + 1))
+          done
 
           attempt=1
           max_attempts=5
@@ -70,7 +93,9 @@ jobs:
               echo "::error::rsync failed after ${attempt} attempts (last exit $rc)"
               exit 1
             fi
+
             echo "rsync attempt ${attempt} failed (exit $rc), retrying..."
+            sleep 5
             attempt=$((attempt + 1))
           done
           echo "rsync succeeded on attempt ${attempt}"
