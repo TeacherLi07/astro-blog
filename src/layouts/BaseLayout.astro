@@ -6,7 +6,7 @@ import { fontConfig, mapleFontFamily } from "@/config/fontConfig";
 import { siteConfig } from "@/config/siteConfig";
 import "@/styles/global.css";
 import { resolveSiteAsset } from "@/utils/assets";
-import { getFontFaceCss, getFontPreconnects, getFontStyle, resolveFontRuntime } from "@/utils/fonts";
+import { getFontPreconnects, getFontStyle, resolveFontRuntime } from "@/utils/fonts";
 import { normalizeSitePath } from "@/utils/paths";
 import { ClientRouter } from "astro:transitions";
 
@@ -64,9 +64,7 @@ const fontRuntime = resolveFontRuntime(fontConfig, {
   mapleFontFamily,
 });
 const activeFonts = fontRuntime.stack;
-const configuredFonts = [...activeFonts.font, ...activeFonts.codeFont];
-const fontFaceCss = getFontFaceCss(configuredFonts);
-const fontPreconnects = getFontPreconnects(configuredFonts);
+const fontPreconnects = getFontPreconnects([...activeFonts.font, ...activeFonts.codeFont]);
 const fontStyle = getFontStyle(fontConfig, fontRuntime.useMapleStyles);
 const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
 ---
@@ -140,10 +138,37 @@ const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
     />
     {faviconLinks.map(({ src, sizes, rel, type }) => <link href={src.trim()} sizes={sizes} rel={rel} type={type} />)}
     {fontPreconnects.map((href) => <link rel="preconnect" href={href} crossorigin="anonymous" />)}
-    {fontFaceCss && <style is:inline set:html={fontFaceCss} />}
+    {/* A print stylesheet is non-render-blocking and does not activate screen fonts. */}
+    <link id="delayed-font-faces" rel="stylesheet" href="/fonts.css" media="print" />
+    <noscript>
+      <link rel="stylesheet" href="/fonts.css" />
+    </noscript>
     {fontStyle && <style is:inline set:html={`:root{${fontStyle}}`} />}
     <title>{pageTitle}</title>
     <ClientRouter fallback="animate" />
+    <script is:inline data-astro-rerun>
+      (() => {
+        const enableFontFaces = () => {
+          const styleSheet = document.getElementById("delayed-font-faces");
+          if (styleSheet) styleSheet.media = "all";
+        };
+
+        const scheduleFontFaces = () => {
+          const start = () => {
+            if (typeof window.requestIdleCallback === "function") {
+              window.requestIdleCallback(enableFontFaces, { timeout: 2000 });
+            } else {
+              window.setTimeout(enableFontFaces, 0);
+            }
+          };
+
+          if (document.readyState === "complete") start();
+          else window.addEventListener("load", start, { once: true });
+        };
+
+        scheduleFontFaces();
+      })();
+    </script>
   </head>
   <body>
     <div class="min-h-screen">

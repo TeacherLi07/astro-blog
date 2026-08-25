@@ -93,10 +93,18 @@ jobs:
           echo "OK: homepage 200"
 
           homepage=$(curl -fsS "$site_url/")
-          font_path=$(printf '%s' "$homepage" | grep -o '/fonts/generated/[^" ]*' | head -n 1)
+          font_css_path=$(printf '%s' "$homepage" | grep -o '/fonts\.css[^" ]*' | head -n 1)
+
+          if [ -z "$font_css_path" ]; then
+            echo "::error::homepage does not reference the lazy font stylesheet"
+            exit 1
+          fi
+
+          font_css=$(curl -fsS "${site_url%/}${font_css_path}")
+          font_path=$(printf '%s' "$font_css" | grep -o '/fonts/generated/[^" ]*' | head -n 1)
 
           if [ -z "$font_path" ]; then
-            echo "::error::homepage does not reference a generated web font"
+            echo "::error::lazy font stylesheet does not reference a generated web font"
             exit 1
           fi
 
