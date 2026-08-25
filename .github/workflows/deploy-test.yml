@@ -101,7 +101,7 @@ jobs:
           fi
 
           font_css=$(curl -fsS "${site_url%/}${font_css_path}")
-          font_path=$(printf '%s' "$font_css" | grep -o '/fonts/generated/[^" ]*' | head -n 1)
+          font_path=$(printf '%s' "$font_css" | grep -oE '/fonts/generated/[A-Za-z0-9./_-]+\.woff2' | head -n 1)
 
           if [ -z "$font_path" ]; then
             echo "::error::lazy font stylesheet does not reference a generated web font"
