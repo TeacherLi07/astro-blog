@@ -197,8 +197,6 @@
     color: var(--color-text);
     background: var(--color-page);
     color-scheme: light;
-    font-synthesis: none;
-    text-rendering: optimizeLegibility;
     --panel-radius: 0.875rem;
   }
 
