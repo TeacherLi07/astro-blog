@@ -1,22 +1,184 @@
-## Development
+# AGENTS.md
 
-When starting the dev server, use background mode:
+This is a personal blog built with Astro, based on the [astro-theme-misthaven](https://github.com/CnBarrier404/astro-theme-misthaven) template. The site is hosted at `blog.teacherli.net`.
 
-```
-astro dev --background
-```
+## Project Overview
 
-Manage the background server with `astro dev stop`, `astro dev status`, and `astro dev logs`.
+A Chinese-language personal blog (`zh-CN`) for documenting tech projects, homelab setups, and personal explorations. Content is written in Markdown and organized into content collections. The site uses Astro's static output mode with Tailwind CSS v4 for styling.
 
-## Documentation
+## Stack
 
-Full documentation: https://docs.astro.build
+- **Framework**: Astro 7.x (static output)
+- **Language**: TypeScript 6.x (strict mode via `astro/tsconfigs/strict`)
+- **Styling**: Tailwind CSS v4 (via `@tailwindcss/vite` plugin)
+- **Fonts**: Maple Mono CN (custom variable font, fetched from GitHub releases and subset for production)
+- **Code Blocks**: astro-expressive-code with One Dark Pro / One Light themes, collapsible blocks, line numbers, and language logos
+- **Markdown Processor**: satteri with custom plugins (spoiler directives, callouts, image captions, table wrapping)
 
-Consult these guides before working on related tasks:
+## Setup Commands
 
-- [Adding pages, dynamic routes, or middleware](https://docs.astro.build/en/guides/routing/)
-- [Working with Astro components](https://docs.astro.build/en/basics/astro-components/)
-- [Using React, Vue, Svelte, or other framework components](https://docs.astro.build/en/guides/framework-components/)
-- [Adding or managing content](https://docs.astro.build/en/guides/content-collections/)
-- [Adding styles or using Tailwind](https://docs.astro.build/en/guides/styling/)
-- [Supporting multiple languages](https://docs.astro.build/en/guides/internationalization/)
+- Install deps: `npm ci --no-audit --no-fund`
+- Start dev server: `npm run dev` (runs `astro dev --background`)
+- Stop dev server: `astro dev stop`
+- Check dev status: `astro dev status`
+- View dev logs: `astro dev logs`
+- Build for production: `npm run build` (includes font subsetting via `npm run fonts:subset`)
+- Preview production build: `npm run preview`
+- Run type check: `npm run check`
+- Format code: `npm run format`
+- Check formatting: `npm run format:check`
+- Fetch font (dev): `npm run fonts:fetch`
+- Subset font (prod): `npm run fonts:subset`
+
+## Architecture
+
+### Configuration (`src/config/`)
+
+All site settings are centralized here. Each file exports a typed `const` object:
+
+- `siteConfig.ts` — Site name, description, URL, author, hero images, favicon, OG generation toggle
+- `fontConfig.ts` — Maple Mono CN font stack, fallback fonts, weights, rendering options
+- `navigationConfig.ts` — Top navigation items (Home, Posts, About; About filtered by `aboutConfig.enabled`)
+- `footerConfig.ts` — Footer links (Privacy, RSS, Sitemap)
+- `commentConfig.ts` — Artalk comment system config (currently disabled)
+- `postConfig.ts` — Reading speed, outdated warning threshold, license
+- `aboutConfig.ts` — About page content, links, tech stack (currently disabled)
+- `expressiveCodeConfig.ts` — Code block themes, collapsible plugin, line numbers, language logos
+
+### Content Collections (`src/content/`)
+
+Defined in `src/content.config.ts`:
+
+- **`posts`**: `src/content/posts/**/*.md` (files prefixed with `_` are ignored by the glob pattern)
+  - Required frontmatter: `title`, `description`, `publishedAt`, `category`, `draft`
+  - Optional frontmatter: `updatedAt`, `tags` (array), `cover`, `draft` (boolean)
+  - Production builds exclude drafts; dev mode shows all posts
+  - File name (without `.md`) becomes the URL slug under `/posts/{slug}`
+- **`pages`**: `src/content/pages/**/*.md`
+  - Optional frontmatter: `title`, `description`, `updatedAt`
+
+### Components (`src/components/`)
+
+- **`layout/`**: `BaseLayout.astro` (root HTML shell, fonts, theme, meta), `HomePage.astro`, `PostsPage.astro`, `AboutPage.astro`, `NavigationBar.astro`, `Footer.astro`
+- **`content/`**: `PostCard.astro`, `PostList.astro`, `PostEndMatter.astro`, `PostOutdatedWarning.astro`, `ArtalkComments.astro`, `CommentSection.astro`, `CommentViewCounts.astro`, `ContactLink.astro`, `Spoiler.astro`, `TechStackCard.astro`
+- **`ui/`**: `Card.astro`, `Hero.astro`, `Icon.astro`, `PopularTags.astro`, `PostMeta.astro`, `PostSort.astro`, `QuoteCard.astro`, `SiteStats.astro`, `TagList.astro`, `ThemeToggle.astro`
+- **`search/`**: `Search.astro`
+- **`widget/`**: `PostFloatingActions.astro`, `TableOfContents.astro`
+
+### Utilities (`src/utils/`)
+
+- `posts.ts` — Post collection queries, adjacent post resolution, word count/reading time
+- `fonts.ts` — Font stack resolution, `@font-face` CSS generation, CSS variable composition
+- `fontAsset.ts` — Reads `.astro/font-asset.json` manifest generated by the font pipeline
+- `assets.ts` — Site asset resolution
+- `paths.ts` — URL path normalization
+- `ogImage.ts` — Open Graph image generation via satori + resvg
+
+### Font Pipeline (`scripts/fonts/`)
+
+The Maple Mono CN font is fetched from a custom GitHub release, cached locally, and subset for production:
+
+- `shared.mjs` — Shared constants: release tag, SHA256, weight axis, paths
+- `fetch-dev.mjs` — Downloads the full font to `.cache/fonts/` and copies to `public/fonts/generated/` (dev mode)
+- `build-subset.mjs` — Builds a charset-optimized subset via Python (fontTools) for production
+- `build-webfont.py` / `validate-subset.py` — Python helpers for subsetting and validation
+  - The Python virtual environment lives at `scripts/fonts/.venv/` (managed by `uv`)
+
+The font manifest at `.astro/font-asset.json` records the current font scope (full/subset), release tag, SHA256, and public path. `fontAsset.ts` reads this at build time to resolve the correct font source.
+
+### Markdown Processing
+
+Custom satteri plugins defined in `astro.config.mjs`:
+
+- **`spoilerPlugin`** — `:spoiler[` hidden text (click to reveal)
+- **`calloutPlugin`** — `> [!NOTE]` / `> [!TIP]` / etc. callout boxes
+- **`imageCaptionPlugin`** — Wraps `img` elements in `<figure>` with `<figcaption>` from `alt` text
+- **`tableWrapPlugin`** — Wraps tables in responsive overflow containers
+
+### Styles
+
+Tailwind CSS v4 with a comprehensive design token system defined in `src/styles/global.css`:
+
+- Light and dark theme variables (`[data-theme="light"]` / `[data-theme="dark"]`)
+- View transitions for page navigation and theme switching
+- Custom breakpoints: `tablet` (47.5625rem), `wide` (73.8125rem)
+- Layout containers: `page` (100rem), `chrome` (109rem), `reading` (65rem), `post` (60rem)
+
+### i18n (`src/i18n/`)
+
+- Languages: `zh-CN` (primary), `en-US`
+- Key definitions in `i18nKey.ts`, translations in `languages/zh-CN.ts` and `languages/en-US.ts`
+- `index.ts` exports the `i18n()` function for string interpolation with placeholders like `{count}`, `{title}`, `{date}`
+
+### Pages (`src/pages/`)
+
+- `index.astro` — Home page
+- `posts/index.astro` — Posts listing
+- `posts/[...slug].astro` — Individual post pages (dynamic route)
+- `[slug].astro` — Generic page route (about, privacy, etc.)
+- `og/[...slug].png.ts` — Dynamic OG image generation
+- `rss.xml.ts` — RSS feed
+- `search-index.json.ts` — Client-side search index
+- `fonts.css.ts` — Runtime font CSS endpoint
+- `robots.txt.ts` — Robots.txt
+- `404.astro` — Not found page
+- `privacy.astro` — Privacy policy page
+
+## Code Style
+
+- **Formatter**: Prettier with `prettier-plugin-astro` and `prettier-plugin-tailwindcss`
+  - 120 char print width, 2-space indent, double quotes, semicolons, trailing commas, LF line endings
+- **Path aliases**: `@/*` maps to `./src/*` (configured in `tsconfig.json`)
+- **Astro components**: Single quotes in attributes, TypeScript in frontmatter
+- **TypeScript**: Strict mode via `astro/tsconfigs/strict`
+
+## Testing
+
+- **Command**: `npm run test` (runs `node --test`)
+- Tests use Node's built-in test runner (no Vitest or Jest)
+- Test files should be colocated with source or in a `test/` directory
+
+## Deployment
+
+- **Target**: `blog.teacherli.net` via rsync over SSH
+- **CI/CD**: GitHub Actions on push to `master` branch
+- **Steps**: checkout → setup Node 24 → cache Maple font → `npm ci` → setup uv (Python 3.12) → sync font env → `npm run fonts:subset` → `npm run build` → rsync `dist/` → smoke test
+- **Smoke test**: Verifies homepage returns 200, font CSS path resolves, and generated woff2 font is accessible
+
+## Conventions
+
+### Writing a New Post
+
+1. Create a new `.md` file in `src/content/posts/`
+2. Use `_template.md` as a starting point
+3. File name becomes the URL slug: `my-post.md` → `/posts/my-post`
+4. Required frontmatter: `title`, `description` (≥1 char), `publishedAt`, `category`, `draft`
+5. Set `draft: true` to hide from production builds
+6. Tags go in a YAML array under `tags:`
+7. Cover images should be placed in `src/assets/images/` and referenced as `cover: "images/filename.png"`
+
+### Disabling Template Posts
+
+Template posts from the upstream theme are disabled by prefixing with `_` (e.g., `_welcome.md`). The content collection glob pattern `**/[^_]*.md` excludes them. Do not delete these files — they serve as reference.
+
+### Modifying Configuration
+
+All site behavior is controlled through `src/config/*.ts`. When adding new Iconify icons (e.g., for `aboutConfig.ts` links), install the corresponding `@iconify-json/<prefix>` package.
+
+### Build Pipeline Notes
+
+- The `predev` script (`node --use-env-proxy scripts/fonts/fetch-dev.mjs`) runs before `dev` to ensure the font is available
+- Font subset generation requires Python 3.12 with `uv` for dependency management
+- The build uses `@playform/compress` and `astro-compressor` (brotli q11, gzip level 9, no zstd)
+- `markdownForAgents` integration generates markdown versions of pages (currently disabled via `enableMarkdownNegotiation: false`)
+
+## Gotchas
+
+- The `--use-env-proxy` flag on Node scripts requires Node >= 22.0.0; the project requires Node >= 24.5.0
+- Maple font subsetting only runs in production builds; dev uses the full font file
+- The font manifest at `.astro/font-asset.json` is generated by the font pipeline and read at build time — it must not be manually edited
+- Artalk comment system is configured but disabled (`commentConfig.enabled: false`); enabling it requires setting `artalk.server` to a valid API URL
+- The About page is disabled (`aboutConfig.enabled: false`); the nav link and page route are filtered out when disabled
+- `generateOpenGraph` is `false` in `siteConfig.ts`; OG images require satori + resvg-js at build time which adds build time and memory usage
+- Post outdated warning is enabled with a 180-day threshold — posts older than this show a warning banner
+- `tsconfig.json` uses `paths` for `@/*` aliases — IDE tooling must support this for imports to resolve
