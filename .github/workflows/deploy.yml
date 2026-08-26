@@ -60,14 +60,13 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
 
           known_hosts_tmp="$HOME/.ssh/known_hosts.tmp"
-          keyscan_log="$HOME/.ssh/ssh-keyscan.log"
           keyscan_attempt=1
           keyscan_max_attempts=5
 
           while [ "$keyscan_attempt" -le "$keyscan_max_attempts" ]; do
             echo "Fetching host keys (attempt $keyscan_attempt/$keyscan_max_attempts)..."
 
-            if ssh-keyscan -H -T 10 cloud.teacherli.net >"$known_hosts_tmp" 2>"$keyscan_log" &&
+            if ssh-keyscan -H -T 10 cloud.teacherli.net >"$known_hosts_tmp" &&
               grep -Eq '^[^[:space:]]+[[:space:]]+(ssh-|ecdsa-|sk-)' "$known_hosts_tmp"; then
               mv "$known_hosts_tmp" ~/.ssh/known_hosts
               break
@@ -75,7 +74,6 @@ jobs:
 
             if [ "$keyscan_attempt" = "$keyscan_max_attempts" ]; then
               echo "::error::unable to fetch SSH host keys for cloud.teacherli.net:22 after $keyscan_max_attempts attempts"
-              cat "$keyscan_log" >&2
               exit 1
             fi
 
