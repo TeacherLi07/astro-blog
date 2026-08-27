@@ -8,6 +8,7 @@ import "@/styles/global.css";
 import { resolveSiteAsset } from "@/utils/assets";
 import { getFontPreconnects, getFontStyle, resolveFontRuntime } from "@/utils/fonts";
 import { normalizeSitePath } from "@/utils/paths";
+import { getFontCacheKey } from "@/utils/fontCacheKey";
 import { ClientRouter } from "astro:transitions";
 
 interface Props {
@@ -67,6 +68,8 @@ const activeFonts = fontRuntime.stack;
 const fontPreconnects = getFontPreconnects([...activeFonts.font, ...activeFonts.codeFont]);
 const fontStyle = getFontStyle(fontConfig, fontRuntime.useMapleStyles);
 const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
+const fontCacheKey = getFontCacheKey();
+const fontCssHref = fontCacheKey ? `/fonts.css?v=${fontCacheKey}` : "/fonts.css";
 ---
 
 <!doctype html>
@@ -139,9 +142,9 @@ const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
     {faviconLinks.map(({ src, sizes, rel, type }) => <link href={src.trim()} sizes={sizes} rel={rel} type={type} />)}
     {fontPreconnects.map((href) => <link rel="preconnect" href={href} crossorigin="anonymous" />)}
     {/* A print stylesheet is non-render-blocking and does not activate screen fonts. */}
-    <link id="delayed-font-faces" rel="stylesheet" href="/fonts.css" media="print" />
+    <link id="delayed-font-faces" rel="stylesheet" href={fontCssHref} media="print" />
     <noscript>
-      <link rel="stylesheet" href="/fonts.css" />
+      <link rel="stylesheet" href={fontCssHref} />
     </noscript>
     {fontStyle && <style is:inline set:html={`:root{${fontStyle}}`} />}
     <title>{pageTitle}</title>
@@ -187,3 +190,5 @@ const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
     <CommentViewCounts />
   </body>
 </html>
+const fontCacheKey = getFontCacheKey();
+const fontCssHref = fontCacheKey ? `/fonts.css?v=${fontCacheKey}` : "/fonts.css";
