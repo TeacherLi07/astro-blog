@@ -16,13 +16,11 @@ draft: false
 
 ## 起因
 
-去年 HomeLab 搭建完成后，照着 [OpenZFS 官方安装教程](https://openzfs.github.io/openzfs-docs/Getting%20Started/Ubuntu/Ubuntu%2022.04%20Root%20on%20ZFS.html#) 装了系统。但可能安装过程有点小问题，加上之后改 GRUB 参数、加 PCIe 和 CPU 低功耗模式、配置 zram 等操作，系统引导被搞炸了很多次。最后一次搞炸后一直没精力修，这个暑假想了想不如直接把系统盘格了重装，就有了这一次经历。
+去年 HomeLab 搭建完成后，照着[OpenZFS 官方安装教程](https://openzfs.github.io/openzfs-docs/Getting%20Started/Ubuntu/Ubuntu%2022.04%20Root%20on%20ZFS.html#)装了系统。但可能安装过程有点小问题，加上之后改 GRUB 参数、加 PCIe 和 CPU 低功耗模式、配置 zram 等操作，系统引导被搞炸了很多次。最后一次搞炸后一直没精力修，这个暑假想了想不如直接把系统盘格了重装，就有了这一次经历。
 
 然而安装过程并非一帆风顺。由于当时还没放假，我的 U 盘落在学校没带回家……没有空余 U 盘，怎么重装系统？
 
-第一个想到的是 PXE 网络启动。去年配置完系统盘后，我似乎尝试过 PXE 启动，笔记本上有相关服务器配置和 ISO 文件。但找不到与 AI 对话的历史记录及相关文档了，随便捣鼓两下没搞起来。
-
-> :spoiler[这就是我需要建立博客站的重要原因！]
+第一个想到的是 PXE 网络启动。去年配置完系统盘后，我似乎尝试过 PXE 启动，笔记本上有相关服务器配置和 ISO 文件。但找不到与 AI 对话的历史记录及相关文档了，随便捣鼓两下没搞起来。:spoiler[这就是我需要建立博客站的重要原因！]
 
 想到 PXE 阶段 10Mbps 的可怜速度，还不知道会不会拖慢后续安装时的读盘……考虑了一下还是放弃了。
 
@@ -42,8 +40,7 @@ draft: false
 
 在 WSL 上配置 ZFS 系统也没那么轻松，因为第一个问题就是：WSL 内核并没有编译包含 OpenZFS 内核模块，且 WSL 内核也不包含动态加载模块的能力。所以唯一的选择就是重新编译 WSL 内核并替换。
 
-好在有大佬写脚本为我们解决了这一问题：  
-[https://github.com/alexhaydock/zfs-on-wsl](https://github.com/alexhaydock/zfs-on-wsl)
+好在有大佬写脚本为我们解决了这一问题：[alexhaydock/zfs-on-wsl](https://github.com/alexhaydock/zfs-on-wsl)
 
 同时，大佬在博客中还提供了使用 [usbipd](https://learn.microsoft.com/en-us/windows/wsl/connect-usb) 将外部 USB 设备穿透给 WSL 独占使用的方法，为后续外接硬盘提供了很大帮助。
 
@@ -51,14 +48,14 @@ draft: false
 
 说真的，安装 Ubuntu Root on ZFS 本身，OpenZFS 的教程已经相当详细，逐行命令解释，完全是手把手的教程。要在 WSL 中安装，要注意几点：
 
-- **命令运行环境**是一个正在运行的 Ubuntu 系统，而非 LiveCD 或 ISO。  
-  在安装过程中，这似乎没有什么影响。只不过最后一步 `zpool export` 后不必重启宿主机，而是执行 usbipd 的解除绑定和 Windows 的安全删除即可。
+- 命令运行环境是一个正在运行的 Ubuntu 系统，而非 LiveCD 或 ISO。  
+  *在安装过程中，这似乎没有什么影响。只不过最后一步 `zpool export` 后不必重启宿主机，而是执行 usbipd 的解除绑定和 Windows 的安全删除即可。*
 
-- **安装目标**是一块 USB 连接的空硬盘，而非系统磁盘。  
-  注意安装时使用 `/dev/disk/by-id/`，这本身也是教程推荐的做法。我的外接硬盘盒没有透传 SSD 本身的 `wwn-` 或 `nvme-` 开头的 ID，只有一个 `usb-` 开头的路径。D 老师说 ZPool 实际会通过磁盘本身的 GUID 来识别磁盘，即使使用 `usb-` 开头的路径，最终也没有影响磁盘在物理机上直接原生启动。
+- 安装目标是一块 USB 连接的空硬盘，而非系统磁盘。  
+  *注意安装时使用 `/dev/disk/by-id/`，这本身也是教程推荐的做法。我的外接硬盘盒没有透传 SSD 本身的 `wwn-` 或 `nvme-` 开头的 ID，只有一个 `usb-` 开头的路径。D 老师说 ZPool 实际会通过磁盘本身的 GUID 来识别磁盘，即使使用 `usb-` 开头的路径，最终也没有影响磁盘在物理机上直接原生启动。*
 
 - `/mnt` 目录在 WSL 中已用作挂载 Windows `drvfs` 的目录，为避免冲突需要使用另外的文件夹。  
-  我新建了一个 `/target` 目录，替代教程中的所有 `/mnt`。
+  *我新建了一个 `/target` 目录，替代教程中的所有 `/mnt`。*
 
 - **GRUB 安装时不应修改宿主机的 UEFI 启动条目**。  
   根据 D 老师的指导：
@@ -88,7 +85,7 @@ draft: false
 
 - 除了默认的 `lz4` 透明压缩外，我为系统池启用了 dedup 去重，即在 `zpool create ... rpool` 中加一行 `-O dedup=on`。DDT 去重表据传会占用 1-4GB RAM 每 TB 存储，对于我 256GB 系统盘而言，内存占用不过 256MB-1GB，但可以换来一定比例的空间节省，我觉得这是一笔划算的买卖。
 
-> [!TIP]
+> [!NOTE]
 > **系统盘上压缩和去重的实际效果**  
 > 系统盘没有启用快照，安装有 NVIDIA 驱动、CUDA、各类常用 CLI 软件、nginx、几个 Docker，还有一些手写脚本等。总占用量目前不大，但按数据类型来说，应该还是比较典型的系统盘。安装使用一个月后，rpool 详细情况如下：
 >
