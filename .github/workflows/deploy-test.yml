@@ -35,6 +35,18 @@ jobs:
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
+      # Font subsetting invokes fontTools and currently takes ~40s on the runner.
+      # Cache the deterministic generated subset and manifest using every input
+      # that can affect its character set, weight range, or output.
+      - name: Restore generated font subset cache
+        id: subset-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            public/fonts/generated
+            .astro/font-asset.json
+          key: maple-font-subset-${{ hashFiles('package-lock.json', 'src/**', 'public/site.webmanifest', 'scripts/fonts/shared.mjs', 'scripts/fonts/build-subset.mjs', 'scripts/fonts/build-webfont.py', 'scripts/fonts/validate-subset.py', 'scripts/fonts/uv.lock') }}
+
       - name: Set up uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
@@ -46,6 +58,7 @@ jobs:
         run: uv sync --project scripts/fonts --locked --no-dev
 
       - name: Build optimized font subset
+        if: steps.subset-cache.outputs.cache-hit != 'true'
         run: npm run fonts:subset
 
       - name: Build
