@@ -1,4 +1,4 @@
----
+﻿---
 import Footer from "@/components/layout/Footer.astro";
 import NavigationBar from "@/components/layout/NavigationBar.astro";
 import CommentViewCounts from "@/components/content/CommentViewCounts.astro";
@@ -190,5 +190,3 @@ const fontCssHref = fontCacheKey ? `/fonts.css?v=${fontCacheKey}` : "/fonts.css"
     <CommentViewCounts />
   </body>
 </html>
-const fontCacheKey = getFontCacheKey();
-const fontCssHref = fontCacheKey ? `/fonts.css?v=${fontCacheKey}` : "/fonts.css";
