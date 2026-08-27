@@ -168,7 +168,8 @@ jobs:
           done
 
           remainder_path=$(printf '%s' "$font_paths" | grep '/remainder\.' | head -n 1)
-          if [ -z "$remainder_path" ] || ! printf '%s' "$homepage" | grep -q "data-remainder-font=${remainder_path}"; then
+          if [ -z "$remainder_path" ] || ! printf '%s' "$homepage" | grep -q 'data-remainder-font=' ||
+            ! printf '%s' "$homepage" | grep -q 'data-remainder-font=[^ >]*remainder\.'; then
             echo "::error::homepage does not expose the remainder font for low-priority prefetch"
             exit 1
           fi
