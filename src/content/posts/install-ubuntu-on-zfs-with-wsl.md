@@ -1,16 +1,16 @@
 ---
-title: 没有U盘怎么重装系统？WSL2在裸盘上安装Ubuntu Root on ZFS 完整教程
-description: 手把手教你无U盘、无PXE，利用WSL2和USB直通技术，在裸盘上安装Ubuntu Root on ZFS系统。涵盖WSL内核编译ZFS模块、GRUB防污染宿主机引导、ZFS池压缩去重优化及实际效果数据，适合HomeLab用户和系统重装爱好者。
+title: 没有U盘怎么重装系统？WSL2在裸盘上安装Ubuntu Root on ZFS
+description: 无U盘、无PXE，利用WSL2和USB直通技术，在裸盘上安装Ubuntu Root on ZFS系统。涵盖WSL内核编译ZFS模块、GRUB防污染宿主机引导、ZFS池压缩去重优化及实际效果数据。
 publishedAt: 2026-08-26T03:16:45.004Z
-updatedAt: 2026-08-26T03:16:45.004Z
+updatedAt: 2026-08-27T02:56:37.900Z
 category: 个人实用
 tags:
-    - HomeLab
-    - 软件
-    - 基础设施
-    - ZFS
-    - WSL
-    - Ubuntu 安装
+  - HomeLab
+  - 软件
+  - 基础设施
+  - ZFS
+  - WSL
+  - Ubuntu 安装
 draft: false
 ---
 
