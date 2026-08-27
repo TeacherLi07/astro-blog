@@ -115,7 +115,7 @@ jobs:
           done
           echo "OK: homepage 200"
 
-          homepage=$(curl -fsS "$site_url/?smoke=${GITHUB_SHA}")
+          homepage=$(curl -fsS "$site_url/")
           font_css_path=$(printf '%s' "$homepage" | grep -o '/fonts\.css[^" ]*' | head -n 1)
 
           if [ -z "$font_css_path" ]; then
