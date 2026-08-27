@@ -7,6 +7,7 @@ import { siteConfig } from "@/config/siteConfig";
 import "@/styles/global.css";
 import { resolveSiteAsset } from "@/utils/assets";
 import { getFontPreconnects, getFontStyle, resolveFontRuntime } from "@/utils/fonts";
+import { readGeneratedFontAsset } from "@/utils/fontAsset";
 import { normalizeSitePath } from "@/utils/paths";
 import { getFontCacheKey } from "@/utils/fontCacheKey";
 import { ClientRouter } from "astro:transitions";
@@ -70,10 +71,13 @@ const fontStyle = getFontStyle(fontConfig, fontRuntime.useMapleStyles);
 const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
 const fontCacheKey = getFontCacheKey();
 const fontCssHref = fontCacheKey ? `/fonts.css?v=${fontCacheKey}` : "/fonts.css";
+const generatedFontAsset = readGeneratedFontAsset();
+const remainderFontHref =
+  canonicalPath === "/" && generatedFontAsset.valid ? (generatedFontAsset.asset.assets?.remainder.publicPath ?? "") : "";
 ---
 
 <!doctype html>
-<html lang={siteConfig.lang}>
+<html lang={siteConfig.lang} data-remainder-font={remainderFontHref || undefined}>
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={pageDescription} />
@@ -156,12 +160,29 @@ const fontCssHref = fontCacheKey ? `/fonts.css?v=${fontCacheKey}` : "/fonts.css"
           if (styleSheet) styleSheet.media = "all";
         };
 
+        const prefetchRemainderFont = () => {
+          const href = document.documentElement.dataset.remainderFont;
+          if (!href || document.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
+
+          const link = document.createElement("link");
+          link.rel = "prefetch";
+          link.as = "font";
+          link.type = "font/woff2";
+          link.crossOrigin = "anonymous";
+          link.href = href;
+          document.head.append(link);
+        };
+
         const scheduleFontFaces = () => {
           const start = () => {
             if (typeof window.requestIdleCallback === "function") {
               window.requestIdleCallback(enableFontFaces, { timeout: 2000 });
+              if (document.documentElement.dataset.remainderFont) {
+                window.requestIdleCallback(prefetchRemainderFont, { timeout: 5000 });
+              }
             } else {
               window.setTimeout(enableFontFaces, 0);
+              if (document.documentElement.dataset.remainderFont) window.setTimeout(prefetchRemainderFont, 1000);
             }
           };
 

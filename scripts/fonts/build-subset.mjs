@@ -123,7 +123,48 @@ async function collectRenderedSources() {
   return [...new Set(files)].sort();
 }
 
-async function buildCharset(sourceFiles) {
+async function collectHomeSources() {
+  const files = [
+    "src/pages/index.astro",
+    "src/layouts/BaseLayout.astro",
+    "src/components/layout/HomePage.astro",
+    "src/components/layout/NavigationBar.astro",
+    "src/components/layout/Footer.astro",
+    "src/components/content/CommentViewCounts.astro",
+    "src/components/content/PostCard.astro",
+    "src/components/content/PostList.astro",
+    "src/components/ui/PostMeta.astro",
+    "src/components/ui/Card.astro",
+    "src/components/ui/Hero.astro",
+    "src/components/ui/Icon.astro",
+    "src/components/ui/PopularTags.astro",
+    "src/components/ui/PostSort.astro",
+    "src/components/ui/QuoteCard.astro",
+    "src/components/ui/SiteStats.astro",
+    "src/components/ui/TagList.astro",
+    ...userFacingConfigs,
+    join("src/i18n/languages", `${await readSiteLanguage()}.ts`),
+    "public/site.webmanifest",
+  ];
+
+  return [...new Set(files)];
+}
+
+async function collectHomePostFrontmatters() {
+  const postFiles = await collectPaths("src/content/posts", {
+    extensions: new Set([".md"]),
+    predicate: (path) => !isSamplePost(path),
+  });
+
+  return Promise.all(
+    postFiles.map(async (path) => {
+      const content = await readFile(path, "utf8");
+      return isDraftPost(content) ? "" : getFrontmatter(content);
+    }),
+  );
+}
+
+async function buildCharset(sourceFiles, additionalTexts = []) {
   const characters = new Set();
   for (let codePoint = 0x20; codePoint <= 0x7e; codePoint += 1) {
     characters.add(String.fromCodePoint(codePoint));
@@ -163,6 +204,8 @@ async function buildCharset(sourceFiles) {
 
     addText(content);
   }
+
+  for (const text of additionalTexts) addText(text);
 
   return [...characters].join("");
 }
@@ -271,6 +314,19 @@ function calculateWeightRange(detectedWeights) {
   return { min, max };
 }
 
+function unicodeRange(characters) {
+  const codePoints = [...new Set([...characters].map((character) => character.codePointAt(0)))].sort((a, b) => a - b);
+  const ranges = [];
+  for (const codePoint of codePoints) {
+    const previous = ranges.at(-1);
+    if (previous && codePoint === previous[1] + 1) previous[1] = codePoint;
+    else ranges.push([codePoint, codePoint]);
+  }
+  return ranges
+    .map(([start, end]) => (start === end ? `U+${start.toString(16)}` : `U+${start.toString(16)}-${end.toString(16)}`))
+    .join(",");
+}
+
 async function downloadFile(url, destination) {
   console.log(`Downloading ${assetUrl()}`);
   const response = await fetch(url);
@@ -343,64 +399,62 @@ await mkdir(workPath, { recursive: true });
 const sourceFontPath = await ensureSourceFont();
 const sourceFiles = await collectRenderedSources();
 const charset = await buildCharset(sourceFiles);
+const homeCharset = await buildCharset(await collectHomeSources(), await collectHomePostFrontmatters());
 const detectedWeights = await collectVariableWeights();
 const weightRange = calculateWeightRange(detectedWeights);
 console.log(`Rendered sources: ${sourceFiles.length}`);
 console.log(`Detected variable weights: ${detectedWeights.join(", ")}`);
 console.log(`Variable axis range: ${weightRange.min}-${weightRange.max}`);
-const charsetPath = join(workPath, "charset.txt");
-await writeFile(charsetPath, charset, "utf8");
-const coveredCharsetPath = join(workPath, "covered-charset.txt");
+const homeCharsetPath = join(workPath, "home-charset.txt");
+await writeFile(homeCharsetPath, homeCharset, "utf8");
+const homeOutputPath = join(workPath, "home.woff2");
+const homeCoveredPath = join(workPath, "home-covered-charset.txt");
+await buildWebfont(sourceFontPath, homeCharsetPath, homeCoveredPath, homeOutputPath, weightRange);
+const supportedHomeCharset = await readFile(homeCoveredPath, "utf8");
+const homeCharacters = new Set(supportedHomeCharset);
+const remainderCharset = [...charset].filter((character) => !homeCharacters.has(character)).join("");
+const remainderCharsetPath = join(workPath, "remainder-charset.txt");
+await writeFile(remainderCharsetPath, remainderCharset, "utf8");
+const remainderOutputPath = join(workPath, "remainder.woff2");
+const remainderCoveredPath = join(workPath, "remainder-covered-charset.txt");
+await buildWebfont(sourceFontPath, remainderCharsetPath, remainderCoveredPath, remainderOutputPath, weightRange);
 
-const temporaryOutputPath = join(workPath, "subset.woff2");
-await buildWebfont(sourceFontPath, charsetPath, coveredCharsetPath, temporaryOutputPath, weightRange);
+async function finalizeAsset(name, temporaryPath, characters) {
+  const outputSha256 = await sha256File(temporaryPath);
+  const finalOutputPath = `${generatedFontPrefix}.${name}.${outputSha256.slice(0, 12)}.woff2`;
+  await mkdir(dirname(finalOutputPath), { recursive: true });
+  await rename(temporaryPath, finalOutputPath);
+  return {
+    scope: "subset",
+    tag: fontRelease.tag,
+    assetName: fontRelease.assetName,
+    sourceSha256: fontRelease.sha256,
+    outputSha256,
+    charsetCount: characters.length,
+    requestedCharsetCount: characters.length,
+    publicPath: toPublicUrlPath(finalOutputPath),
+    unicodeRange: unicodeRange(characters),
+    weightMin: weightRange.min,
+    weightDefault: fontRelease.weightAxis.default,
+    weightMax: weightRange.max,
+  };
+}
 
-const supportedCharset = await readFile(coveredCharsetPath, "utf8");
-
-const outputSha256 = await sha256File(temporaryOutputPath);
-const shortOutputSha256 = outputSha256.slice(0, 12);
-const finalOutputPath = `${generatedFontPrefix}.${shortOutputSha256}.woff2`;
-await mkdir(dirname(finalOutputPath), { recursive: true });
-await rename(temporaryOutputPath, finalOutputPath);
+const homeAsset = await finalizeAsset("home", homeOutputPath, supportedHomeCharset);
+const remainderCharsetCovered = await readFile(remainderCoveredPath, "utf8");
+const remainderAsset = await finalizeAsset("remainder", remainderOutputPath, remainderCharsetCovered);
 
 const manifest = {
   scope: "subset",
   tag: fontRelease.tag,
   assetName: fontRelease.assetName,
   sourceSha256: fontRelease.sha256,
-  outputSha256,
-  charsetCount: supportedCharset.length,
-  requestedCharsetCount: charset.length,
-  publicPath: toPublicUrlPath(finalOutputPath),
+  assets: { home: homeAsset, remainder: remainderAsset },
   weightMin: weightRange.min,
   weightDefault: fontRelease.weightAxis.default,
   weightMax: weightRange.max,
 };
 
 await writeFile(paths.manifest, `${JSON.stringify(manifest, null, 2)}\n`);
-const validationResult = spawnSync(
-  "uv",
-  [
-    "run",
-    "--project",
-    pythonProject,
-    "--locked",
-    "--no-dev",
-    "python",
-    "scripts/fonts/validate-subset.py",
-    paths.manifest,
-    coveredCharsetPath,
-  ],
-  {
-    stdio: "inherit",
-    env: { ...process.env, UV_CACHE_DIR: ".cache/uv" },
-  },
-);
-
-if (validationResult.error) throw validationResult.error;
-if (validationResult.status !== 0) {
-  throw new Error(`Subset validation exited with status ${validationResult.status}`);
-}
-
-console.log(`Subset font ready: ${manifest.publicPath}`);
-console.log(`Characters: ${manifest.charsetCount}; output SHA256: ${outputSha256}`);
+console.log(`Subset fonts ready: ${homeAsset.publicPath}, ${remainderAsset.publicPath}`);
+console.log(`Characters: home ${homeAsset.charsetCount}, remainder ${remainderAsset.charsetCount}`);

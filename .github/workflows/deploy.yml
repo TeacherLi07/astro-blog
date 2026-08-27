@@ -124,26 +124,43 @@ jobs:
           fi
 
           font_css=$(curl -fsS "${site_url%/}${font_css_path}")
-          font_path=$(printf '%s' "$font_css" | grep -oE '/fonts/generated/[A-Za-z0-9./_-]+\.woff2' | head -n 1)
+          font_paths=$(printf '%s' "$font_css" | grep -oE '/fonts/generated/[A-Za-z0-9./_-]+\.woff2' | sort -u)
+          font_count=$(printf '%s\n' "$font_paths" | sed '/^$/d' | wc -l)
 
-          if [ -z "$font_path" ]; then
-            echo "::error::lazy font stylesheet does not reference a generated web font"
+          if [ "$font_count" -ne 2 ]; then
+            echo "::error::lazy font stylesheet must reference exactly two generated web fonts (found ${font_count})"
             exit 1
           fi
 
-          font_url="${site_url%/}${font_path}"
-          font_body=$(mktemp)
-          trap 'rm -f "$font_body"' EXIT
-          font_code=$(curl -sS -o "$font_body" -w '%{http_code}' "$font_url")
+          for font_path in $font_paths; do
+            font_url="${site_url%/}${font_path}"
+            font_body=$(mktemp)
+            font_code=$(curl -sS -o "$font_body" -w '%{http_code}' "$font_url")
 
-          if [ "$font_code" != "200" ]; then
-            echo "::error::generated font request failed (${font_code}): ${font_url}"
+            if [ "$font_code" != "200" ]; then
+              echo "::error::generated font request failed (${font_code}): ${font_url}"
+              rm -f "$font_body"
+              exit 1
+            fi
+
+            if [ "$(head -c 4 "$font_body")" != "wOF2" ]; then
+              echo "::error::generated font response is not a woff2 file: ${font_url}"
+              rm -f "$font_body"
+              exit 1
+            fi
+            rm -f "$font_body"
+            echo "OK: generated font 200 and valid woff2: ${font_path}"
+          done
+
+          remainder_path=$(printf '%s' "$font_paths" | grep '/remainder\.' | head -n 1)
+          if [ -z "$remainder_path" ] || ! printf '%s' "$homepage" | grep -q "data-remainder-font=${remainder_path}"; then
+            echo "::error::homepage does not expose the remainder font for low-priority prefetch"
             exit 1
           fi
 
-          if [ "$(head -c 4 "$font_body")" != "wOF2" ]; then
-            echo "::error::generated font response is not a woff2 file: ${font_url}"
+          if ! printf '%s' "$homepage" | grep -q 'link.rel="prefetch"'; then
+            echo "::error::homepage does not contain the remainder font prefetch logic"
             exit 1
           fi
 
-          echo "OK: generated font 200 and valid woff2: ${font_path}"
+          echo "OK: homepage exposes remainder font prefetch: ${remainder_path}"
