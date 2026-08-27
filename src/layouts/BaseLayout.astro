@@ -77,7 +77,7 @@ const remainderFontHref =
 ---
 
 <!doctype html>
-<html lang={siteConfig.lang} data-remainder-font={remainderFontHref || undefined}>
+<html lang={siteConfig.lang}>
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={pageDescription} />
@@ -147,6 +147,9 @@ const remainderFontHref =
     {fontPreconnects.map((href) => <link rel="preconnect" href={href} crossorigin="anonymous" />)}
     {/* A print stylesheet is non-render-blocking and does not activate screen fonts. */}
     <link id="delayed-font-faces" rel="stylesheet" href={fontCssHref} media="print" />
+    {remainderFontHref && (
+      <link rel="prefetch" href={remainderFontHref} as="font" type="font/woff2" crossorigin="anonymous" />
+    )}
     <noscript>
       <link rel="stylesheet" href={fontCssHref} />
     </noscript>
@@ -160,29 +163,12 @@ const remainderFontHref =
           if (styleSheet) styleSheet.media = "all";
         };
 
-        const prefetchRemainderFont = () => {
-          const href = document.documentElement.dataset.remainderFont;
-          if (!href || document.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
-
-          const link = document.createElement("link");
-          link.rel = "prefetch";
-          link.as = "font";
-          link.type = "font/woff2";
-          link.crossOrigin = "anonymous";
-          link.href = href;
-          document.head.append(link);
-        };
-
         const scheduleFontFaces = () => {
           const start = () => {
             if (typeof window.requestIdleCallback === "function") {
               window.requestIdleCallback(enableFontFaces, { timeout: 2000 });
-              if (document.documentElement.dataset.remainderFont) {
-                window.requestIdleCallback(prefetchRemainderFont, { timeout: 5000 });
-              }
             } else {
               window.setTimeout(enableFontFaces, 0);
-              if (document.documentElement.dataset.remainderFont) window.setTimeout(prefetchRemainderFont, 1000);
             }
           };
 
