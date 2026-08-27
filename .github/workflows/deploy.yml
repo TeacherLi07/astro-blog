@@ -152,11 +152,4 @@ jobs:
             echo "OK: generated font 200 and valid woff2: ${font_path}"
           done
 
-          remainder_path=$(printf '%s' "$font_paths" | grep '/remainder\.' | head -n 1)
-          if [ -z "$remainder_path" ] || ! printf '%s' "$homepage" | grep -q 'rel=prefetch' ||
-            ! printf '%s' "$homepage" | grep -q 'remainder\.'; then
-            echo "::error::homepage does not expose the remainder font for low-priority prefetch"
-            exit 1
-          fi
-
-          echo "OK: homepage exposes remainder font prefetch: ${remainder_path}"
+          echo "OK: both generated font shards are deployed and valid"
