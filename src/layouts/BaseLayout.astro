@@ -72,12 +72,18 @@ const faviconLinks = siteConfig.favicon.filter(({ src }) => src.trim());
 const fontCacheKey = getFontCacheKey();
 const fontCssHref = fontCacheKey ? `/fonts.css?v=${fontCacheKey}` : "/fonts.css";
 const generatedFontAsset = readGeneratedFontAsset();
+const homeFontHref =
+  canonicalPath === "/" && fontRuntime.useMapleStyles && generatedFontAsset.valid
+    ? (generatedFontAsset.asset.assets?.home.publicPath ?? "")
+    : "";
 const remainderFontHref =
-  canonicalPath === "/" && generatedFontAsset.valid ? (generatedFontAsset.asset.assets?.remainder.publicPath ?? "") : "";
+  canonicalPath === "/" && fontRuntime.useMapleStyles && generatedFontAsset.valid
+    ? (generatedFontAsset.asset.assets?.remainder.publicPath ?? "")
+    : "";
 ---
 
 <!doctype html>
-<html lang={siteConfig.lang}>
+<html lang={siteConfig.lang} data-remainder-font={remainderFontHref || undefined}>
   <head>
     <meta charset="UTF-8" />
     <meta name="description" content={pageDescription} />
@@ -147,9 +153,8 @@ const remainderFontHref =
     {fontPreconnects.map((href) => <link rel="preconnect" href={href} crossorigin="anonymous" />)}
     {/* A print stylesheet is non-render-blocking and does not activate screen fonts. */}
     <link id="delayed-font-faces" rel="stylesheet" href={fontCssHref} media="print" />
-    {remainderFontHref && (
-      <link rel="prefetch" href={remainderFontHref} as="font" type="font/woff2" crossorigin="anonymous" />
-    )}
+    {/* The homepage shard is needed for first paint; the remainder is fetched only after it is underway. */}
+    {homeFontHref && <link rel="preload" href={homeFontHref} as="font" type="font/woff2" crossorigin="anonymous" />}
     <noscript>
       <link rel="stylesheet" href={fontCssHref} />
     </noscript>
@@ -161,6 +166,25 @@ const remainderFontHref =
         const enableFontFaces = () => {
           const styleSheet = document.getElementById("delayed-font-faces");
           if (styleSheet) styleSheet.media = "all";
+
+          const href = document.documentElement.dataset.remainderFont;
+          if (!href || document.querySelector(`link[rel="prefetch"][href="${href}"]`)) return;
+
+          const prefetchRemainderFont = () => {
+            const link = document.createElement("link");
+            link.rel = "prefetch";
+            link.as = "font";
+            link.type = "font/woff2";
+            link.crossOrigin = "anonymous";
+            link.href = href;
+            document.head.append(link);
+          };
+
+          if (typeof window.requestIdleCallback === "function") {
+            window.requestIdleCallback(prefetchRemainderFont, { timeout: 5000 });
+          } else {
+            window.setTimeout(prefetchRemainderFont, 1000);
+          }
         };
 
         const scheduleFontFaces = () => {
