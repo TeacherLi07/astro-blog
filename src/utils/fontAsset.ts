@@ -17,6 +17,11 @@ export type GeneratedFontAsset = {
   outputSha256?: string;
   charsetCount?: number;
   requestedCharsetCount?: number;
+  unicodeRange?: string;
+  assets?: {
+    readonly home: GeneratedFontAsset;
+    readonly remainder: GeneratedFontAsset;
+  };
 };
 
 export type GeneratedFontAssetResult =
@@ -77,6 +82,23 @@ export function readGeneratedFontAsset(): GeneratedFontAssetResult {
     manifest.weightMax > max
   ) {
     return invalid("manifest contains an invalid variable weight range");
+  }
+
+  if (manifest.scope === "subset" && manifest.assets) {
+    for (const [name, asset] of Object.entries(manifest.assets)) {
+      if (!asset || typeof asset.publicPath !== "string" || !generatedFontPathPattern.test(asset.publicPath)) {
+        return invalid(`subset manifest ${name} asset must point to a generated woff2 asset`);
+      }
+      if (typeof asset.outputSha256 !== "string" || !sha256Pattern.test(asset.outputSha256)) {
+        return invalid(`subset manifest ${name} asset requires a valid outputSha256`);
+      }
+      if (typeof asset.charsetCount !== "number" || !Number.isInteger(asset.charsetCount) || asset.charsetCount <= 0) {
+        return invalid(`subset manifest ${name} asset requires a positive integer charsetCount`);
+      }
+      const assetPath = join("public", ...asset.publicPath.split("/").filter(Boolean));
+      if (!existsSync(assetPath)) return invalid(`generated font file does not exist at ${assetPath}`);
+    }
+    return { valid: true, asset: manifest as GeneratedFontAsset };
   }
 
   if (typeof manifest.publicPath !== "string" || !generatedFontPathPattern.test(manifest.publicPath)) {

@@ -2,6 +2,7 @@ export interface FontDefinition {
   readonly family: string;
   readonly src?: string;
   readonly weight?: string;
+  readonly unicodeRange?: string;
 }
 
 export interface FontStack {

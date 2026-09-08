@@ -9,6 +9,12 @@ import { readGeneratedFontAsset } from "@/utils/fontAsset";
 export function getFontCacheKey(): string {
   const result = readGeneratedFontAsset();
   if (!result.valid) return "";
+
+  if (result.asset.assets) {
+    return [result.asset.assets.home.outputSha256, result.asset.assets.remainder.outputSha256]
+      .map((hash) => hash?.slice(0, 12) ?? "")
+      .join("-");
+  }
+
   return result.asset.outputSha256?.slice(0, 12) ?? "";
 }
-

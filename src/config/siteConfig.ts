@@ -9,7 +9,7 @@ export const siteConfig = {
   title: "TeacherLi的博客~",
 
   // 站点副标题
-  subTitle: "Stories, Ideas, Attempts",
+  subTitle: "分享，是一种「支援未来」",
 
   // 站点描述
   description: ["Tech Otakus Save the World!"],

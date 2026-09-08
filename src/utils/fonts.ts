@@ -21,7 +21,7 @@ function uniqueFontSources(fonts: readonly FontDefinition[]): FontSource[] {
   const seen = new Set<string>();
 
   return getFontSources(fonts).filter((font) => {
-    const key = JSON.stringify([font.family, font.src, font.weight]);
+    const key = JSON.stringify([font.family, font.src, font.weight, font.unicodeRange]);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -39,8 +39,8 @@ export function getFontFamily(fonts: readonly FontDefinition[]) {
 export function getFontFaceCss(fonts: readonly FontDefinition[]) {
   return uniqueFontSources(fonts)
     .map(
-      ({ family, src, weight = "100 900" }) =>
-        `@font-face{font-family:${JSON.stringify(family)};src:url(${JSON.stringify(src)});font-weight:${weight};font-style:normal;font-display:swap}`,
+      ({ family, src, weight = "100 900", unicodeRange }) =>
+        `@font-face{font-family:${JSON.stringify(family)};src:url(${JSON.stringify(src)});font-weight:${weight};font-style:normal;font-display:swap${unicodeRange ? `;unicode-range:${unicodeRange}` : ""}}`,
     )
     .join("\n");
 }
@@ -69,19 +69,26 @@ export function resolveFontRuntime(config: FontConfig, options: ResolveFontRunti
     return { stack: config.fonts.fallback, useMapleStyles: false };
   }
 
-  const generatedFontPath = assetResult.asset.publicPath;
   const generatedFontWeight = `${assetResult.asset.weightMin} ${assetResult.asset.weightMax}`;
+  const generatedFonts = assetResult.asset.assets
+    ? [assetResult.asset.assets.home, assetResult.asset.assets.remainder]
+    : [assetResult.asset];
 
-  function resolveGeneratedSource(font: FontDefinition): FontDefinition {
+  function resolveGeneratedSource(font: FontDefinition): FontDefinition[] {
     return font.family === options.mapleFontFamily && font.src?.trim()
-      ? { ...font, src: generatedFontPath, weight: generatedFontWeight }
-      : font;
+      ? generatedFonts.map(({ publicPath, unicodeRange }) => ({
+          ...font,
+          src: publicPath,
+          weight: generatedFontWeight,
+          unicodeRange,
+        }))
+      : [font];
   }
 
   return {
     stack: {
-      font: config.fonts.maple.font.map(resolveGeneratedSource),
-      codeFont: config.fonts.maple.codeFont.map(resolveGeneratedSource),
+      font: config.fonts.maple.font.flatMap(resolveGeneratedSource),
+      codeFont: config.fonts.maple.codeFont.flatMap(resolveGeneratedSource),
     },
     useMapleStyles: true,
   };
