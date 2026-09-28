@@ -8,7 +8,7 @@ tags:
   - HomeLab
   - 硬件
   - 基础设施
-draft: true
+draft: false
 ---
 
 ## 成员及网络配置
@@ -22,11 +22,11 @@ draft: true
 
 ## 网络互连通性
 
-### IPv4互联数据
+Initial TTL = 64。 IPv4 / IPv6。默认IPv4。
 
 | 源 \ 目标 | Homelab | LAX | HK | PH |
 |---|---|---|---|---|
-| Homelab | — | 129ms<br>TTL 54<br>↑200 | 35ms<br>TTL 52<br>↑200 | 180ms<br>TTL 48<br>↑200 |
-| LAX | 12ms<br>TTL 54<br>↑1000 | — | 150ms<br>TTL 50<br>↑1000 | 220ms<br>TTL 48<br>↑1000 |
-| HK | 35ms<br>TTL 52<br>↑150 | 150ms<br>TTL 50<br>↑150 | — | 60ms<br>TTL 52<br>↑150 |
-| PH | 180ms<br>TTL 48<br>↑200 | 220ms<br>TTL 48<br>↑200 | 60ms<br>TTL 52<br>↑200 | — |
+| Homelab | — | 130/145ms<br>TTL 53/49<br>↑170/70Mbps<br>↓420/400Mbps| 33ms<br>TTL 47<br>↑150Mbps<br>↓145Mbps | 308ms<br>TTL 49<br>↑80Mbps<br>↓110Mbps |
+| LAX | -/126ms<br>TTL -/53<br>↑-/430Mbps<br>↓-/170Mbps | — | 171ms<br>TTL 49<br>↑145Mbps<br>↓150Mbps | 177ms<br>TTL 50<br>↑205Mbps<br>↓200Mbps |
+| HK | — | 181ms<br>TTL 49<br>↑150Mbps<br>↓155Mbps | — | 18ms<br>TTL 55<br>↑145Mbps<br>↓145Mbps |
+| PH | — | 178ms<br>TTL 49<br>↑200Mbps<br>↓190Mbps | 18ms<br>TTL 55<br>↑150Mbps<br>↓150Mbps | — |
