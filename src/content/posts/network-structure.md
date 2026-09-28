@@ -1,6 +1,6 @@
 ---
-title: null
-description: null
+title: 标题
+description: 简介
 publishedAt: 2026-09-28T07:21:47.637Z
 updatedAt: 2026-09-28T07:21:48.762Z
 category: 个人实用
@@ -22,10 +22,11 @@ draft: true
 
 ## 网络互连通性
 
+### IPv4互联数据
 
 | 源 \ 目标 | Homelab | LAX | HK | PH |
 |---|---|---|---|---|
-| Homelab | — | 12ms<br>TTL 54<br>↑200 | 35ms<br>TTL 52<br>↑200 | 180ms<br>TTL 48<br>↑200 |
+| Homelab | — | 129ms<br>TTL 54<br>↑200 | 35ms<br>TTL 52<br>↑200 | 180ms<br>TTL 48<br>↑200 |
 | LAX | 12ms<br>TTL 54<br>↑1000 | — | 150ms<br>TTL 50<br>↑1000 | 220ms<br>TTL 48<br>↑1000 |
 | HK | 35ms<br>TTL 52<br>↑150 | 150ms<br>TTL 50<br>↑150 | — | 60ms<br>TTL 52<br>↑150 |
 | PH | 180ms<br>TTL 48<br>↑200 | 220ms<br>TTL 48<br>↑200 | 60ms<br>TTL 52<br>↑200 | — |
